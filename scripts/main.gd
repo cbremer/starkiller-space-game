@@ -4,7 +4,9 @@ const FUEL_DRAIN_PER_SECOND := 11.0
 const REFUEL_PER_SECOND := 38.0
 const REFUEL_RECT := Rect2(Vector2(15, 170), Vector2(130, 260))
 const BOLT_SPAWN_OFFSET := Vector2(0, -20)
+const BOMB_COOLDOWN := 1.5
 const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
+const BOMB_BLAST_SCRIPT := preload("res://scripts/bomb_blast.gd")
 
 @onready var player: PlayerShip = $PlayerShip
 @onready var state_label: Label = $CanvasLayer/HUD/StateLabel
@@ -14,6 +16,7 @@ const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
 
 var game_state := GameState.new()
 var last_action_text := "No actions yet"
+var bomb_cooldown_remaining := 0.0
 
 func _ready() -> void:
 	game_state.changed.connect(_update_hud)
@@ -23,6 +26,9 @@ func _ready() -> void:
 	info_label.text = "Enter=start, Esc=pause, Z=fire, X=bomb, R=manual refuel"
 
 func _process(delta: float) -> void:
+	bomb_cooldown_remaining = maxf(0.0, bomb_cooldown_remaining - delta)
+	_update_info_label()
+
 	if Input.is_action_just_pressed("start"):
 		game_state.start_run()
 		player.position = Vector2(120, 320)
@@ -36,8 +42,7 @@ func _process(delta: float) -> void:
 			game_state.add_score(10)
 			_spawn_bolt()
 		if Input.is_action_just_pressed("bomb"):
-			game_state.register_action("Bomb")
-			game_state.add_score(25)
+			_try_trigger_bomb()
 
 		game_state.drain_fuel(FUEL_DRAIN_PER_SECOND * delta)
 
@@ -61,6 +66,19 @@ func _spawn_bolt() -> void:
 	bolt.position = player.position + BOLT_SPAWN_OFFSET
 	add_child(bolt)
 
+func _try_trigger_bomb() -> void:
+	if bomb_cooldown_remaining > 0.0:
+		last_action_text = "Bomb cooldown: %.1fs" % bomb_cooldown_remaining
+		action_label.text = "Last Action: %s" % last_action_text
+		return
+	game_state.register_action("Bomb")
+	game_state.add_score(25)
+	game_state.add_fuel(12.0)
+	bomb_cooldown_remaining = BOMB_COOLDOWN
+	var blast := BOMB_BLAST_SCRIPT.new()
+	blast.position = player.position
+	add_child(blast)
+
 func _on_respawned() -> void:
 	player.position = Vector2(120, 320)
 	last_action_text = "Respawned"
@@ -75,6 +93,10 @@ func _update_hud() -> void:
 		game_state.status_text()
 	]
 	action_label.text = "Last Action: %s" % last_action_text
+	_update_info_label()
+
+func _update_info_label() -> void:
+	info_label.text = "Enter=start, Esc=pause, Z=fire, X=bomb (%.1fs cd), R=manual refuel" % bomb_cooldown_remaining
 
 func _update_input_debug() -> void:
 	var pressed_actions: Array[String] = []
