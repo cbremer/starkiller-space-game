@@ -5,7 +5,6 @@ const REFUEL_PER_SECOND := 32.0
 const REFUEL_RECT := Rect2(Vector2(15, 170), Vector2(130, 260))
 const BOLT_SPAWN_OFFSET := Vector2(22, 0)
 const BOMB_DROP_OFFSET := Vector2(8, 12)
-const BOMB_COOLDOWN := 1.15
 const ENEMY_SPAWN_INTERVAL := 1.05
 const ENEMY_SPAWN_VARIANCE := 0.22
 const ENEMY_SPAWN_X := 1060.0
@@ -30,7 +29,6 @@ const ENEMY_TARGET_SCRIPT := preload("res://scripts/enemy_target.gd")
 
 var game_state := GameState.new()
 var last_action_text := "No actions yet"
-var bomb_cooldown_remaining := 0.0
 var enemy_spawn_remaining := ENEMY_SPAWN_INTERVAL
 var rng := RandomNumberGenerator.new()
 
@@ -43,14 +41,12 @@ func _ready() -> void:
 	info_label.text = "Enter=start, Esc=pause, Z=fire, X=drop bomb, R=manual refuel"
 
 func _process(delta: float) -> void:
-	bomb_cooldown_remaining = maxf(0.0, bomb_cooldown_remaining - delta)
 	_update_info_label()
 
 	if Input.is_action_just_pressed("start"):
 		game_state.start_run()
 		player.position = Vector2(120, 320)
 		_clear_combat_nodes()
-		bomb_cooldown_remaining = 0.0
 		enemy_spawn_remaining = 0.35
 
 	if Input.is_action_just_pressed("pause"):
@@ -108,13 +104,7 @@ func _update_enemy_spawns(delta: float) -> void:
 		enemy_spawn_remaining = ENEMY_SPAWN_INTERVAL + rng.randf_range(-ENEMY_SPAWN_VARIANCE, ENEMY_SPAWN_VARIANCE)
 
 func _try_trigger_bomb() -> void:
-	if bomb_cooldown_remaining > 0.0:
-		last_action_text = "Bomb cooldown: %.1fs" % bomb_cooldown_remaining
-		action_label.text = "Last Action: %s" % last_action_text
-		return
 	game_state.register_action("Bomb")
-	game_state.add_fuel(3.0)
-	bomb_cooldown_remaining = BOMB_COOLDOWN
 	_drop_bomb()
 
 func _drop_bomb() -> void:
@@ -208,7 +198,7 @@ func _update_hud() -> void:
 	_update_info_label()
 
 func _update_info_label() -> void:
-	info_label.text = "Enter=start, Esc=pause, Z=fire (air), X=drop bomb (ground, %.1fs cd), R=manual refuel" % bomb_cooldown_remaining
+	info_label.text = "Enter=start, Esc=pause, Z=fire (air), X=drop bomb (ground), R=manual refuel"
 
 func _update_input_debug() -> void:
 	var pressed_actions: Array[String] = []
