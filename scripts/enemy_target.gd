@@ -3,8 +3,9 @@ class_name EnemyTarget
 
 @export var speed := 120.0
 @export var hit_radius := 16.0
-@export var laser_points := 45
-@export var bomb_points := 25
+@export var target_type := "air"
+@export var laser_points := 50
+@export var bomb_points := 80
 
 var is_active := true
 var _destroyed := false
@@ -24,11 +25,21 @@ func apply_hit(weapon: String) -> int:
 		return 0
 	_destroyed = true
 	queue_free()
+	if target_type == "ground" and weapon != "bomb":
+		return 0
+	if target_type == "air" and weapon == "bomb":
+		return 0
 	if weapon == "bomb":
 		return bomb_points
 	return laser_points
 
 func _draw() -> void:
+	if target_type == "ground":
+		draw_rect(Rect2(Vector2(-16, -8), Vector2(32, 16)), Color(0.58, 0.48, 0.32))
+		draw_rect(Rect2(Vector2(-10, -16), Vector2(20, 8)), Color(0.82, 0.23, 0.23))
+		draw_line(Vector2(0, -16), Vector2(12, -22), Color(0.95, 0.85, 0.25), 2.0)
+		return
+
 	draw_polygon(PackedVector2Array([
 		Vector2(-18, 0),
 		Vector2(0, -16),

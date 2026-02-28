@@ -46,22 +46,35 @@
 
 ## Session Notes (2026-02-28)
 
-### Implemented (Session 1 vertical slice)
-- Godot 4 project scaffold with startup scene (`scenes/Main.tscn`).
+### Implemented (Sessions 1-3)
+- Godot project scaffold with startup scene (`scenes/Main.tscn`) and Godot 4.6.1 compatibility fixes.
 - Required keyboard input actions with defaults: arrows, `Z`, `X`, `Enter`, `Esc`.
-- Additional prototype-only `refuel` action on `R` for mechanic validation.
-- `GameState` shell with runtime fields and transitions for start, pause, death, and timed respawn.
-- Controllable placeholder player ship with bounded movement.
-- HUD + debug text for state visibility and simultaneous-input readout.
-- Fuel pressure loop with drain-over-time, refuel behavior, and death on zero fuel.
+- Prototype `refuel` action on `R` retained for quick fuel-loop validation.
+- `GameState` model with start, pause, death, respawn, and stage tracking.
+- Horizontal flight orientation (ship faces right, combat flows left-to-right).
+- Split weapon roles:
+  - `Z` laser for air targets.
+  - `X` gravity-drop bombs for ground targets.
+- Combat loop:
+  - air and ground target spawning,
+  - collision and score events,
+  - ship damage on air-target contact.
+- Fuel pressure loop:
+  - passive drain,
+  - refuel zone/manual refuel helper,
+  - moving fuel tanks that restore fuel when collected.
+- Stage progression shell:
+  - segment data model in `main.gd`,
+  - distance-based segment advancement,
+  - per-segment spawn tuning and fuel-tank cadence.
 
-### Confirmed behavior in this slice
+### Confirmed behavior in current prototype
 - Multi-input combinations are visible through on-screen pressed-action debug text.
-- Fire and bomb are distinct actions with separate score effects and HUD action readout.
-- Fuel can be replenished by entering the green refuel zone or holding `R`.
-- On fuel depletion, player dies and respawns after cooldown while lives remain.
+- Fire and bomb are mechanically distinct and visually distinct.
+- Bombing flow matches drop-style behavior (forward travel plus gravity fall) rather than radial blast.
+- Stage indicator and segment name update as the run advances through segment distances.
 
 ### Open assumptions for next sessions
-- Current stage flow is fixed to stage `1` placeholder.
-- Collision and target interaction rules are not yet implemented.
+- Terrain geometry and terrain collision are still placeholders.
+- Stage segments are data-driven but currently script-local (not externalized assets/resources yet).
 - Art/audio are placeholders and not fidelity targets yet.

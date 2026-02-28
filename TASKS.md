@@ -69,7 +69,7 @@ Goal:
 
 ## Execution Checklist (Live)
 
-Last updated: 2026-02-28
+Last updated: 2026-02-28 (Session 3 pass)
 Branch: `codex/troubleshoot-gray-screen`
 
 - [x] Initialize Godot project scaffold (`project.godot`, `scenes/`, `scripts/`, placeholder assets).
@@ -82,9 +82,9 @@ Branch: `codex/troubleshoot-gray-screen`
 - [x] Make `fire` visibly functional (projectile/laser bolt).
 - [x] Make `bomb` visibly functional (blast effect + cooldown feedback).
 - [x] Resolve Godot 4.6.1 script compatibility issue that caused gray-screen behavior.
-- [ ] Human playtest tuning pass (movement feel, fuel drain, respawn timing).
-- [ ] Update `SPEC.md` for latest implemented behavior (fire projectile + bomb cooldown/blast).
-- [ ] Update `README.md` for latest controls/feature notes.
+- [x] Human playtest tuning pass (movement feel, fuel drain, respawn timing).
+- [x] Update `SPEC.md` for latest implemented behavior (fire projectile + bomb cooldown/blast).
+- [x] Update `README.md` for latest controls/feature notes.
 
 ## Next Up (Session 2 Start)
 
@@ -92,7 +92,15 @@ Branch: `codex/troubleshoot-gray-screen`
 - [x] Add projectile collision/hit handling and cleanup.
 - [x] Add bomb-to-enemy interaction rules.
 - [x] Add score events tied to enemy kills/interactions.
-- [ ] Human playtest pass for Session 2 combat feel and balancing.
+- [x] Human playtest pass for Session 2 combat feel and balancing.
+
+## Session 3 Checklist (Current)
+
+- [x] Introduce stage segment data and segment loader logic.
+- [x] Implement scrolling progression and segment transition conditions.
+- [x] Add fuel tank spawn/refuel behavior tied to segment rules.
+- [ ] Human playtest progression pacing and difficulty spikes.
+- [x] Update `SPEC.md` and docs.
 
 ### Session 1 acceptance criteria
 - Project boots in Godot and runs on macOS.

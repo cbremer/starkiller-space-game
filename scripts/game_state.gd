@@ -48,6 +48,10 @@ func add_fuel(amount: float) -> void:
 	fuel = clamp(fuel + amount, 0.0, MAX_FUEL)
 	changed.emit()
 
+func set_stage(new_stage_id: int) -> void:
+	stage_id = max(new_stage_id, 1)
+	changed.emit()
+
 func drain_fuel(amount: float) -> void:
 	if not run_started or is_paused or not is_alive:
 		return

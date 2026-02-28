@@ -1,11 +1,12 @@
 # Starkiller Space Game (Godot 4 Prototype)
 
-Session 1 delivers a runnable Godot 4 vertical slice focused on controls, game-state flow, HUD visibility, and a fuel-pressure loop.
+Current prototype is a keyboard-first, Scramble-style horizontal shooter slice with stage segments, split weapon roles, and fuel pressure.
 
 ## Run
 
-1. Open this folder in **Godot 4.2+**.
+1. Open this folder in **Godot 4.6.1+**.
 2. Press Play (`F5`) to run `scenes/Main.tscn`.
+3. Press `Enter` to start a run.
 
 ## Automated Tests
 
@@ -24,23 +25,30 @@ Current coverage includes both unit checks and scenario flows for `GameState`:
 ## Controls (default)
 
 - Move: Arrow keys
-- Fire: `Z`
-- Bomb: `X`
+- Fire (air targets): `Z`
+- Drop bomb (ground targets): `X`
 - Start run: `Enter`
 - Pause toggle: `Esc`
-- Manual refuel (prototype helper): `R`
+- Manual refuel helper (prototype): `R`
 
-## Implemented in Session 1
+## Current Features
 
-- Godot project scaffold (`project.godot`, main scene, scripts, placeholder icon).
-- Input map setup for all required actions.
-- `GameState` model with start/pause/death/respawn transitions.
-- Controllable player ship placeholder bounded to a play area.
-- Live HUD showing score/lives/fuel/stage/paused/alive-dead status.
-- Fuel drain loop with zero-fuel death and respawn path.
-- Refuel validation via an on-screen refuel zone and the `R` helper key.
+- Core run-state flow (`GameState`): start, pause, death, respawn.
+- Horizontal flight feel with ship facing right.
+- Distinct weapon behavior:
+  - Laser shots travel right and destroy air targets.
+  - Bombs are gravity-dropped payloads and destroy ground targets.
+- Enemy pressure loop with randomized spawn pacing/speeds.
+- Fuel system:
+  - passive fuel drain,
+  - refuel zone + `R` helper,
+  - collectible fuel tanks spawned by stage segment rules.
+- Stage progression shell:
+  - distance-based segment transitions,
+  - segment-specific spawn parameters,
+  - HUD stage/segment visibility.
 
 ## Notes
 
-- This is intentionally placeholder-heavy for rapid iteration.
-- Next session should add enemies, collisions, and fire/bomb interaction rules.
+- Visuals and effects are intentionally placeholder-focused.
+- Current target is mechanics validation and tuning, not art/audio fidelity.
