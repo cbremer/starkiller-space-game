@@ -14,10 +14,13 @@ const FUEL_TANK_SPAWN_X := 1060.0
 const FUEL_TANK_Y_MIN := 190.0
 const FUEL_TANK_Y_MAX := 460.0
 const PLAYER_HIT_RADIUS := 16.0
+const PLAYER_TERRAIN_CLEARANCE := 12.0
 const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
 const BOMB_PAYLOAD_SCRIPT := preload("res://scripts/bomb_payload.gd")
 const ENEMY_TARGET_SCRIPT := preload("res://scripts/enemy_target.gd")
 const FUEL_TANK_SCRIPT := preload("res://scripts/fuel_tank.gd")
+const PARALLAX_BACKGROUND_SCRIPT := preload("res://scripts/parallax_background.gd")
+const TERRAIN_BAND_SCRIPT := preload("res://scripts/terrain_band.gd")
 
 @onready var player: PlayerShip = $PlayerShip
 @onready var state_label: Label = $CanvasLayer/HUD/StateLabel
@@ -34,9 +37,12 @@ var current_segment_index := 0
 var segment_distance_remaining := 0.0
 var run_distance := 0.0
 var rng := RandomNumberGenerator.new()
+var background_layer = null
+var terrain_layer = null
 
 func _ready() -> void:
 	rng.randomize()
+	_create_world_layers()
 	_build_stage_segments()
 	game_state.changed.connect(_update_hud)
 	game_state.action_triggered.connect(_on_action_triggered)
@@ -77,6 +83,7 @@ func _process(delta: float) -> void:
 
 	_update_combat_state()
 	game_state.update(delta)
+	_update_world_layers()
 	player.visible = game_state.is_alive
 	player.set_physics_process(game_state.run_started and game_state.is_alive and not game_state.is_paused)
 	_set_actor_activity(game_state.run_started and game_state.is_alive and not game_state.is_paused)
@@ -95,8 +102,9 @@ func _spawn_enemy() -> void:
 	var segment = _current_segment()
 	var enemy := ENEMY_TARGET_SCRIPT.new()
 	var spawn_ground := rng.randf() <= float(segment["ground_target_chance"])
+	var ground_spawn_y := _terrain_height_at(ENEMY_SPAWN_X) - 12.0
 	if spawn_ground:
-		enemy.position = Vector2(ENEMY_SPAWN_X, ENEMY_GROUND_Y)
+		enemy.position = Vector2(ENEMY_SPAWN_X, ground_spawn_y)
 		enemy.set("speed", rng.randf_range(float(segment["ground_speed_min"]), float(segment["ground_speed_max"])))
 		enemy.set("target_type", "ground")
 	else:
@@ -126,7 +134,11 @@ func _drop_bomb() -> void:
 
 func _spawn_fuel_tank() -> void:
 	var tank := FUEL_TANK_SCRIPT.new()
-	tank.position = Vector2(FUEL_TANK_SPAWN_X, rng.randf_range(FUEL_TANK_Y_MIN, FUEL_TANK_Y_MAX))
+	var terrain_y := _terrain_height_at(FUEL_TANK_SPAWN_X)
+	var y_max := minf(FUEL_TANK_Y_MAX, terrain_y - 58.0)
+	if y_max <= FUEL_TANK_Y_MIN:
+		y_max = FUEL_TANK_Y_MIN + 8.0
+	tank.position = Vector2(FUEL_TANK_SPAWN_X, rng.randf_range(FUEL_TANK_Y_MIN, y_max))
 	var segment = _current_segment()
 	tank.set("fuel_amount", float(segment["fuel_tank_amount"]))
 	add_child(tank)
@@ -149,6 +161,13 @@ func _update_combat_state() -> void:
 	var bolt_nodes := get_tree().get_nodes_in_group("laser_bolts")
 	var bomb_nodes := get_tree().get_nodes_in_group("bomb_payloads")
 	var fuel_tank_nodes := get_tree().get_nodes_in_group("fuel_tanks")
+	var terrain_height := _terrain_height_at(player.position.x)
+
+	if player.position.y + PLAYER_TERRAIN_CLEARANCE >= terrain_height:
+		game_state.die()
+		last_action_text = "Crashed into terrain"
+		action_label.text = "Last Action: %s" % last_action_text
+		return
 
 	for enemy_node in enemy_nodes:
 		if enemy_node == null or not enemy_node.has_method("apply_hit"):
@@ -226,6 +245,30 @@ func _clear_combat_nodes() -> void:
 		fuel_tank_node.queue_free()
 	for enemy_node in get_tree().get_nodes_in_group("enemy_targets"):
 		enemy_node.queue_free()
+
+func _create_world_layers() -> void:
+	if background_layer == null:
+		background_layer = PARALLAX_BACKGROUND_SCRIPT.new()
+		add_child(background_layer)
+		move_child(background_layer, 0)
+	if terrain_layer == null:
+		terrain_layer = TERRAIN_BAND_SCRIPT.new()
+		add_child(terrain_layer)
+		move_child(terrain_layer, 1)
+	_update_world_layers()
+
+func _update_world_layers() -> void:
+	if background_layer != null:
+		background_layer.call("set_scroll_distance", run_distance)
+		background_layer.call("set_segment_index", current_segment_index)
+	if terrain_layer != null:
+		terrain_layer.call("set_scroll_distance", run_distance)
+		terrain_layer.call("set_segment_index", current_segment_index)
+
+func _terrain_height_at(screen_x: float) -> float:
+	if terrain_layer != null and terrain_layer.has_method("ground_height_at_screen_x"):
+		return float(terrain_layer.call("ground_height_at_screen_x", screen_x))
+	return ENEMY_GROUND_Y
 
 func _build_stage_segments() -> void:
 	stage_segments = [
