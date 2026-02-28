@@ -73,4 +73,5 @@ func _update_input_debug() -> void:
 	for action in ["move_up", "move_down", "move_left", "move_right", "fire", "bomb", "start", "pause"]:
 		if Input.is_action_pressed(action):
 			pressed_actions.append(action)
-	input_label.text = "Pressed: %s" % (["none"] if pressed_actions.is_empty() else pressed_actions).join(", ")
+	var pressed_text := "none" if pressed_actions.is_empty() else ", ".join(pressed_actions)
+	input_label.text = "Pressed: %s" % pressed_text
