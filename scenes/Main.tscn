@@ -1,0 +1,39 @@
+[gd_scene load_steps=3 format=3 uid="uid://c77wfc07q2n0e"]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_7ooxk"]
+[ext_resource type="Script" path="res://scripts/player_ship.gd" id="2_as8vx"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_7ooxk")
+
+[node name="PlayerShip" type="Node2D" parent="."]
+script = ExtResource("2_as8vx")
+position = Vector2(120, 320)
+
+[node name="ZoneTint" type="ColorRect" parent="."]
+offset_left = 15.0
+offset_top = 170.0
+offset_right = 145.0
+offset_bottom = 430.0
+color = Color(0.145098, 0.454902, 0.168627, 0.341176)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="HUD" type="VBoxContainer" parent="CanvasLayer"]
+offset_left = 12.0
+offset_top = 10.0
+offset_right = 1010.0
+offset_bottom = 200.0
+theme_override_constants/separation = 8
+
+[node name="StateLabel" type="Label" parent="CanvasLayer/HUD"]
+text = "State"
+
+[node name="InputLabel" type="Label" parent="CanvasLayer/HUD"]
+text = "Pressed:"
+
+[node name="ActionLabel" type="Label" parent="CanvasLayer/HUD"]
+text = "Last Action"
+
+[node name="InfoLabel" type="Label" parent="CanvasLayer/HUD"]
+text = "Controls"

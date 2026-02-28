@@ -43,3 +43,25 @@
 ## Spec Readiness Criteria
 - Requirements are specific enough for an AI coding agent to decompose into phased implementation tasks.
 - Core mechanics and control behavior are explicit and testable without additional product clarification.
+
+## Session Notes (2026-02-28)
+
+### Implemented (Session 1 vertical slice)
+- Godot 4 project scaffold with startup scene (`scenes/Main.tscn`).
+- Required keyboard input actions with defaults: arrows, `Z`, `X`, `Enter`, `Esc`.
+- Additional prototype-only `refuel` action on `R` for mechanic validation.
+- `GameState` shell with runtime fields and transitions for start, pause, death, and timed respawn.
+- Controllable placeholder player ship with bounded movement.
+- HUD + debug text for state visibility and simultaneous-input readout.
+- Fuel pressure loop with drain-over-time, refuel behavior, and death on zero fuel.
+
+### Confirmed behavior in this slice
+- Multi-input combinations are visible through on-screen pressed-action debug text.
+- Fire and bomb are distinct actions with separate score effects and HUD action readout.
+- Fuel can be replenished by entering the green refuel zone or holding `R`.
+- On fuel depletion, player dies and respawns after cooldown while lives remain.
+
+### Open assumptions for next sessions
+- Current stage flow is fixed to stage `1` placeholder.
+- Collision and target interaction rules are not yet implemented.
+- Art/audio are placeholders and not fidelity targets yet.
