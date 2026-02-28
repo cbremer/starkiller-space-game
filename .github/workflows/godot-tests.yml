@@ -1,0 +1,25 @@
+name: Godot Tests
+
+on:
+  push:
+    branches:
+      - main
+      - codex/**
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.1
+          use-dotnet: false
+
+      - name: Run headless tests
+        run: godot --headless --path . --script res://tests/run_tests.gd
