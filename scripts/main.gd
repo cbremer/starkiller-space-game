@@ -15,12 +15,15 @@ const FUEL_TANK_Y_MIN := 190.0
 const FUEL_TANK_Y_MAX := 460.0
 const PLAYER_HIT_RADIUS := 16.0
 const PLAYER_TERRAIN_CLEARANCE := 12.0
+const PLAYER_CEILING_CLEARANCE := 10.0
+const TUNNEL_SPAWN_MARGIN := 40.0
 const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
 const BOMB_PAYLOAD_SCRIPT := preload("res://scripts/bomb_payload.gd")
 const ENEMY_TARGET_SCRIPT := preload("res://scripts/enemy_target.gd")
 const FUEL_TANK_SCRIPT := preload("res://scripts/fuel_tank.gd")
 const PARALLAX_BACKGROUND_SCRIPT := preload("res://scripts/parallax_background.gd")
 const TERRAIN_BAND_SCRIPT := preload("res://scripts/terrain_band.gd")
+const CEILING_BAND_SCRIPT := preload("res://scripts/ceiling_band.gd")
 
 @onready var player: PlayerShip = $PlayerShip
 @onready var state_label: Label = $CanvasLayer/HUD/StateLabel
@@ -38,6 +41,7 @@ var segment_distance_remaining := 0.0
 var run_distance := 0.0
 var rng := RandomNumberGenerator.new()
 var background_layer = null
+var ceiling_layer = null
 var terrain_layer = null
 
 func _ready() -> void:
@@ -108,7 +112,13 @@ func _spawn_enemy() -> void:
 		enemy.set("speed", rng.randf_range(float(segment["ground_speed_min"]), float(segment["ground_speed_max"])))
 		enemy.set("target_type", "ground")
 	else:
-		enemy.position = Vector2(ENEMY_SPAWN_X, rng.randf_range(ENEMY_AIR_Y_MIN, ENEMY_AIR_Y_MAX))
+		var tunnel_top := _ceiling_height_at(ENEMY_SPAWN_X) + TUNNEL_SPAWN_MARGIN
+		var tunnel_bottom := _terrain_height_at(ENEMY_SPAWN_X) - TUNNEL_SPAWN_MARGIN
+		var air_min := maxf(ENEMY_AIR_Y_MIN, tunnel_top)
+		var air_max := minf(ENEMY_AIR_Y_MAX, tunnel_bottom)
+		if air_max <= air_min:
+			air_max = air_min + 8.0
+		enemy.position = Vector2(ENEMY_SPAWN_X, rng.randf_range(air_min, air_max))
 		enemy.set("speed", rng.randf_range(float(segment["air_speed_min"]), float(segment["air_speed_max"])))
 		enemy.set("target_type", "air")
 	add_child(enemy)
@@ -135,10 +145,12 @@ func _drop_bomb() -> void:
 func _spawn_fuel_tank() -> void:
 	var tank := FUEL_TANK_SCRIPT.new()
 	var terrain_y := _terrain_height_at(FUEL_TANK_SPAWN_X)
+	var ceiling_y := _ceiling_height_at(FUEL_TANK_SPAWN_X)
+	var y_min := maxf(FUEL_TANK_Y_MIN, ceiling_y + 55.0)
 	var y_max := minf(FUEL_TANK_Y_MAX, terrain_y - 58.0)
-	if y_max <= FUEL_TANK_Y_MIN:
-		y_max = FUEL_TANK_Y_MIN + 8.0
-	tank.position = Vector2(FUEL_TANK_SPAWN_X, rng.randf_range(FUEL_TANK_Y_MIN, y_max))
+	if y_max <= y_min:
+		y_max = y_min + 8.0
+	tank.position = Vector2(FUEL_TANK_SPAWN_X, rng.randf_range(y_min, y_max))
 	var segment = _current_segment()
 	tank.set("fuel_amount", float(segment["fuel_tank_amount"]))
 	add_child(tank)
@@ -161,7 +173,14 @@ func _update_combat_state() -> void:
 	var bolt_nodes := get_tree().get_nodes_in_group("laser_bolts")
 	var bomb_nodes := get_tree().get_nodes_in_group("bomb_payloads")
 	var fuel_tank_nodes := get_tree().get_nodes_in_group("fuel_tanks")
+	var ceiling_height := _ceiling_height_at(player.position.x)
 	var terrain_height := _terrain_height_at(player.position.x)
+
+	if player.position.y - PLAYER_CEILING_CLEARANCE <= ceiling_height:
+		game_state.die()
+		last_action_text = "Crashed into ceiling"
+		action_label.text = "Last Action: %s" % last_action_text
+		return
 
 	if player.position.y + PLAYER_TERRAIN_CLEARANCE >= terrain_height:
 		game_state.die()
@@ -251,19 +270,31 @@ func _create_world_layers() -> void:
 		background_layer = PARALLAX_BACKGROUND_SCRIPT.new()
 		add_child(background_layer)
 		move_child(background_layer, 0)
+	if ceiling_layer == null:
+		ceiling_layer = CEILING_BAND_SCRIPT.new()
+		add_child(ceiling_layer)
+		move_child(ceiling_layer, 1)
 	if terrain_layer == null:
 		terrain_layer = TERRAIN_BAND_SCRIPT.new()
 		add_child(terrain_layer)
-		move_child(terrain_layer, 1)
+		move_child(terrain_layer, 2)
 	_update_world_layers()
 
 func _update_world_layers() -> void:
 	if background_layer != null:
 		background_layer.call("set_scroll_distance", run_distance)
 		background_layer.call("set_segment_index", current_segment_index)
+	if ceiling_layer != null:
+		ceiling_layer.call("set_scroll_distance", run_distance)
+		ceiling_layer.call("set_segment_index", current_segment_index)
 	if terrain_layer != null:
 		terrain_layer.call("set_scroll_distance", run_distance)
 		terrain_layer.call("set_segment_index", current_segment_index)
+
+func _ceiling_height_at(screen_x: float) -> float:
+	if ceiling_layer != null and ceiling_layer.has_method("ceiling_height_at_screen_x"):
+		return float(ceiling_layer.call("ceiling_height_at_screen_x", screen_x))
+	return 80.0
 
 func _terrain_height_at(screen_x: float) -> float:
 	if terrain_layer != null and terrain_layer.has_method("ground_height_at_screen_x"):
