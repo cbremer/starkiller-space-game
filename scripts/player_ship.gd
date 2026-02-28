@@ -1,7 +1,7 @@
 extends Node2D
 class_name PlayerShip
 
-@export var speed := 260.0
+@export var speed := 300.0
 @export var bounds := Rect2(Vector2(40, 120), Vector2(880, 420))
 
 var input_vector := Vector2.ZERO
@@ -19,9 +19,9 @@ func _physics_process(delta: float) -> void:
 
 func _draw() -> void:
 	draw_polygon(PackedVector2Array([
-		Vector2(0, -16),
-		Vector2(16, 14),
-		Vector2(0, 8),
-		Vector2(-16, 14)
+		Vector2(18, 0),
+		Vector2(-14, -12),
+		Vector2(-6, 0),
+		Vector2(-14, 12)
 	]), PackedColorArray([Color.CYAN]))
-	draw_line(Vector2(0, 8), Vector2(0, 18), Color.YELLOW, 2.0)
+	draw_line(Vector2(-10, 0), Vector2(-18, 0), Color.YELLOW, 2.0)

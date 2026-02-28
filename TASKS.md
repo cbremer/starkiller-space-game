@@ -67,6 +67,33 @@ Goal:
 9. `AI Agent` - Update project docs
 - Update documentation (`README.md`, etc.) based on what we've implemented.
 
+## Execution Checklist (Live)
+
+Last updated: 2026-02-28
+Branch: `codex/troubleshoot-gray-screen`
+
+- [x] Initialize Godot project scaffold (`project.godot`, `scenes/`, `scripts/`, placeholder assets).
+- [x] Set startup scene and confirm project boots.
+- [x] Implement input map defaults (`move_*`, `fire`, `bomb`, `start`, `pause`, `refuel` helper).
+- [x] Implement `GameState` model and start/pause/death/respawn transitions.
+- [x] Add controllable player ship placeholder with bounded movement.
+- [x] Add first-pass HUD with score/lives/fuel/stage/status and input debug.
+- [x] Implement fuel drain + refuel zone/helper + death/respawn loop.
+- [x] Make `fire` visibly functional (projectile/laser bolt).
+- [x] Make `bomb` visibly functional (blast effect + cooldown feedback).
+- [x] Resolve Godot 4.6.1 script compatibility issue that caused gray-screen behavior.
+- [ ] Human playtest tuning pass (movement feel, fuel drain, respawn timing).
+- [ ] Update `SPEC.md` for latest implemented behavior (fire projectile + bomb cooldown/blast).
+- [ ] Update `README.md` for latest controls/feature notes.
+
+## Next Up (Session 2 Start)
+
+- [x] Add simple enemy targets.
+- [x] Add projectile collision/hit handling and cleanup.
+- [x] Add bomb-to-enemy interaction rules.
+- [x] Add score events tied to enemy kills/interactions.
+- [ ] Human playtest pass for Session 2 combat feel and balancing.
+
 ### Session 1 acceptance criteria
 - Project boots in Godot and runs on macOS.
 - Required default keys function as specified.

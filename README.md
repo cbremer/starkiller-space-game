@@ -7,6 +7,20 @@ Session 1 delivers a runnable Godot 4 vertical slice focused on controls, game-s
 1. Open this folder in **Godot 4.2+**.
 2. Press Play (`F5`) to run `scenes/Main.tscn`.
 
+## Automated Tests
+
+Run the headless test suite:
+
+```bash
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/run_tests.gd
+```
+
+Current coverage includes both unit checks and scenario flows for `GameState`:
+- start/pause behavior
+- fuel drain -> death -> respawn
+- full lifecycle through game over
+- pause freeze and resume behavior
+
 ## Controls (default)
 
 - Move: Arrow keys
