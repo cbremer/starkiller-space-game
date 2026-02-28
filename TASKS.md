@@ -88,10 +88,11 @@ Branch: `codex/troubleshoot-gray-screen`
 
 ## Next Up (Session 2 Start)
 
-- [ ] Add simple enemy targets.
-- [ ] Add projectile collision/hit handling and cleanup.
-- [ ] Add bomb-to-enemy interaction rules.
-- [ ] Add score events tied to enemy kills/interactions.
+- [x] Add simple enemy targets.
+- [x] Add projectile collision/hit handling and cleanup.
+- [x] Add bomb-to-enemy interaction rules.
+- [x] Add score events tied to enemy kills/interactions.
+- [ ] Human playtest pass for Session 2 combat feel and balancing.
 
 ### Session 1 acceptance criteria
 - Project boots in Godot and runs on macOS.

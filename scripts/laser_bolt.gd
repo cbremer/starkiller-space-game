@@ -2,8 +2,16 @@ extends Node2D
 class_name LaserBolt
 
 @export var speed := 520.0
+@export var hit_radius := 10.0
+
+var is_active := true
+
+func _ready() -> void:
+	add_to_group("laser_bolts")
 
 func _process(delta: float) -> void:
+	if not is_active:
+		return
 	position.y -= speed * delta
 	if position.y < -24.0:
 		queue_free()
