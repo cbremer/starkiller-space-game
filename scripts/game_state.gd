@@ -75,7 +75,7 @@ func update(delta: float) -> void:
 			respawn()
 
 func respawn() -> void:
-	if lives < 0:
+	if lives <= 0:
 		return
 	is_alive = true
 	fuel = MAX_FUEL
@@ -85,7 +85,7 @@ func respawn() -> void:
 func status_text() -> String:
 	if not run_started:
 		return "Waiting for start"
-	if lives < 0:
+	if lives <= 0:
 		return "Game Over"
 	if is_alive:
 		return "Alive"

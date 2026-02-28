@@ -14,17 +14,18 @@ const ENEMY_SPAWN_Y_MAX := 530.0
 const ENEMY_SPEED_MIN := 130.0
 const ENEMY_SPEED_MAX := 205.0
 const PLAYER_HIT_RADIUS := 16.0
+const GAME_STATE_SCRIPT := preload("res://scripts/game_state.gd")
 const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
 const BOMB_BLAST_SCRIPT := preload("res://scripts/bomb_blast.gd")
 const ENEMY_TARGET_SCRIPT := preload("res://scripts/enemy_target.gd")
 
-@onready var player: PlayerShip = $PlayerShip
+@onready var player: Node2D = $PlayerShip
 @onready var state_label: Label = $CanvasLayer/HUD/StateLabel
 @onready var input_label: Label = $CanvasLayer/HUD/InputLabel
 @onready var action_label: Label = $CanvasLayer/HUD/ActionLabel
 @onready var info_label: Label = $CanvasLayer/HUD/InfoLabel
 
-var game_state := GameState.new()
+var game_state = GAME_STATE_SCRIPT.new()
 var last_action_text := "No actions yet"
 var bomb_cooldown_remaining := 0.0
 var enemy_spawn_remaining := ENEMY_SPAWN_INTERVAL
