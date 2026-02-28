@@ -3,6 +3,8 @@ extends Node2D
 const FUEL_DRAIN_PER_SECOND := 11.0
 const REFUEL_PER_SECOND := 38.0
 const REFUEL_RECT := Rect2(Vector2(15, 170), Vector2(130, 260))
+const BOLT_SPAWN_OFFSET := Vector2(0, -20)
+const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
 
 @onready var player: PlayerShip = $PlayerShip
 @onready var state_label: Label = $CanvasLayer/HUD/StateLabel
@@ -32,6 +34,7 @@ func _process(delta: float) -> void:
 		if Input.is_action_just_pressed("fire"):
 			game_state.register_action("Fire")
 			game_state.add_score(10)
+			_spawn_bolt()
 		if Input.is_action_just_pressed("bomb"):
 			game_state.register_action("Bomb")
 			game_state.add_score(25)
@@ -52,6 +55,11 @@ func _process(delta: float) -> void:
 func _on_action_triggered(action_name: String) -> void:
 	last_action_text = "%s @ %.2fs" % [action_name, Time.get_ticks_msec() / 1000.0]
 	action_label.text = "Last Action: %s" % last_action_text
+
+func _spawn_bolt() -> void:
+	var bolt := LASER_BOLT_SCRIPT.new()
+	bolt.position = player.position + BOLT_SPAWN_OFFSET
+	add_child(bolt)
 
 func _on_respawned() -> void:
 	player.position = Vector2(120, 320)
