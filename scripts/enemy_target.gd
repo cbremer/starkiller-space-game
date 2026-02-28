@@ -15,8 +15,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not is_active:
 		return
-	position.y += speed * delta
-	if position.y > 760.0:
+	position.x -= speed * delta
+	if position.x < -32.0:
 		queue_free()
 
 func apply_hit(weapon: String) -> int:
@@ -30,9 +30,9 @@ func apply_hit(weapon: String) -> int:
 
 func _draw() -> void:
 	draw_polygon(PackedVector2Array([
-		Vector2(0, -18),
-		Vector2(16, 0),
-		Vector2(0, 18),
-		Vector2(-16, 0)
+		Vector2(-18, 0),
+		Vector2(0, -16),
+		Vector2(18, 0),
+		Vector2(0, 16)
 	]), PackedColorArray([Color(0.9, 0.2, 0.2)]))
 	draw_circle(Vector2.ZERO, 6.0, Color(1.0, 0.8, 0.2))

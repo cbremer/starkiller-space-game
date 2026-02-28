@@ -3,12 +3,13 @@ extends Node2D
 const FUEL_DRAIN_PER_SECOND := 11.0
 const REFUEL_PER_SECOND := 38.0
 const REFUEL_RECT := Rect2(Vector2(15, 170), Vector2(130, 260))
-const BOLT_SPAWN_OFFSET := Vector2(0, -20)
+const BOLT_SPAWN_OFFSET := Vector2(22, 0)
 const BOMB_COOLDOWN := 1.5
 const BOMB_RADIUS := 145.0
 const ENEMY_SPAWN_INTERVAL := 1.3
-const ENEMY_SPAWN_X_MIN := 70.0
-const ENEMY_SPAWN_X_MAX := 950.0
+const ENEMY_SPAWN_X := 1060.0
+const ENEMY_SPAWN_Y_MIN := 130.0
+const ENEMY_SPAWN_Y_MAX := 530.0
 const PLAYER_HIT_RADIUS := 16.0
 const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
 const BOMB_BLAST_SCRIPT := preload("res://scripts/bomb_blast.gd")
@@ -83,7 +84,7 @@ func _spawn_bolt() -> void:
 
 func _spawn_enemy() -> void:
 	var enemy := ENEMY_TARGET_SCRIPT.new()
-	enemy.position = Vector2(rng.randf_range(ENEMY_SPAWN_X_MIN, ENEMY_SPAWN_X_MAX), -26.0)
+	enemy.position = Vector2(ENEMY_SPAWN_X, rng.randf_range(ENEMY_SPAWN_Y_MIN, ENEMY_SPAWN_Y_MAX))
 	add_child(enemy)
 
 func _update_enemy_spawns(delta: float) -> void:
