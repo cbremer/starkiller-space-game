@@ -5,21 +5,19 @@ const REFUEL_PER_SECOND := 32.0
 const REFUEL_RECT := Rect2(Vector2(15, 170), Vector2(130, 260))
 const BOLT_SPAWN_OFFSET := Vector2(22, 0)
 const BOMB_DROP_OFFSET := Vector2(8, 12)
-const ENEMY_SPAWN_INTERVAL := 1.05
-const ENEMY_SPAWN_VARIANCE := 0.22
+const STAGE_SCROLL_SPEED := 190.0
 const ENEMY_SPAWN_X := 1060.0
 const ENEMY_AIR_Y_MIN := 130.0
 const ENEMY_AIR_Y_MAX := 440.0
 const ENEMY_GROUND_Y := 548.0
-const ENEMY_AIR_SPEED_MIN := 130.0
-const ENEMY_AIR_SPEED_MAX := 205.0
-const ENEMY_GROUND_SPEED_MIN := 95.0
-const ENEMY_GROUND_SPEED_MAX := 135.0
-const GROUND_TARGET_CHANCE := 0.4
+const FUEL_TANK_SPAWN_X := 1060.0
+const FUEL_TANK_Y_MIN := 190.0
+const FUEL_TANK_Y_MAX := 460.0
 const PLAYER_HIT_RADIUS := 16.0
 const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
 const BOMB_PAYLOAD_SCRIPT := preload("res://scripts/bomb_payload.gd")
 const ENEMY_TARGET_SCRIPT := preload("res://scripts/enemy_target.gd")
+const FUEL_TANK_SCRIPT := preload("res://scripts/fuel_tank.gd")
 
 @onready var player: PlayerShip = $PlayerShip
 @onready var state_label: Label = $CanvasLayer/HUD/StateLabel
@@ -29,11 +27,17 @@ const ENEMY_TARGET_SCRIPT := preload("res://scripts/enemy_target.gd")
 
 var game_state := GameState.new()
 var last_action_text := "No actions yet"
-var enemy_spawn_remaining := ENEMY_SPAWN_INTERVAL
+var enemy_spawn_remaining := 1.0
+var fuel_tank_spawn_remaining := 0.0
+var stage_segments: Array = []
+var current_segment_index := 0
+var segment_distance_remaining := 0.0
+var run_distance := 0.0
 var rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	rng.randomize()
+	_build_stage_segments()
 	game_state.changed.connect(_update_hud)
 	game_state.action_triggered.connect(_on_action_triggered)
 	game_state.player_respawned.connect(_on_respawned)
@@ -47,13 +51,16 @@ func _process(delta: float) -> void:
 		game_state.start_run()
 		player.position = Vector2(120, 320)
 		_clear_combat_nodes()
+		_reset_run_progression()
 		enemy_spawn_remaining = 0.35
 
 	if Input.is_action_just_pressed("pause"):
 		game_state.toggle_pause()
 
 	if game_state.run_started and game_state.is_alive and not game_state.is_paused:
+		_update_stage_progress(delta)
 		_update_enemy_spawns(delta)
+		_update_fuel_tank_spawns(delta)
 		if Input.is_action_just_pressed("fire"):
 			game_state.register_action("Fire")
 			_spawn_bolt()
@@ -85,23 +92,28 @@ func _spawn_bolt() -> void:
 	add_child(bolt)
 
 func _spawn_enemy() -> void:
+	var segment = _current_segment()
 	var enemy := ENEMY_TARGET_SCRIPT.new()
-	var spawn_ground := rng.randf() <= GROUND_TARGET_CHANCE
+	var spawn_ground := rng.randf() <= float(segment["ground_target_chance"])
 	if spawn_ground:
 		enemy.position = Vector2(ENEMY_SPAWN_X, ENEMY_GROUND_Y)
-		enemy.set("speed", rng.randf_range(ENEMY_GROUND_SPEED_MIN, ENEMY_GROUND_SPEED_MAX))
+		enemy.set("speed", rng.randf_range(float(segment["ground_speed_min"]), float(segment["ground_speed_max"])))
 		enemy.set("target_type", "ground")
 	else:
 		enemy.position = Vector2(ENEMY_SPAWN_X, rng.randf_range(ENEMY_AIR_Y_MIN, ENEMY_AIR_Y_MAX))
-		enemy.set("speed", rng.randf_range(ENEMY_AIR_SPEED_MIN, ENEMY_AIR_SPEED_MAX))
+		enemy.set("speed", rng.randf_range(float(segment["air_speed_min"]), float(segment["air_speed_max"])))
 		enemy.set("target_type", "air")
 	add_child(enemy)
 
 func _update_enemy_spawns(delta: float) -> void:
+	var segment = _current_segment()
 	enemy_spawn_remaining = maxf(0.0, enemy_spawn_remaining - delta)
 	if enemy_spawn_remaining <= 0.0:
 		_spawn_enemy()
-		enemy_spawn_remaining = ENEMY_SPAWN_INTERVAL + rng.randf_range(-ENEMY_SPAWN_VARIANCE, ENEMY_SPAWN_VARIANCE)
+		enemy_spawn_remaining = float(segment["enemy_spawn_interval"]) + rng.randf_range(
+			-float(segment["enemy_spawn_variance"]),
+			float(segment["enemy_spawn_variance"])
+		)
 
 func _try_trigger_bomb() -> void:
 	game_state.register_action("Bomb")
@@ -112,6 +124,23 @@ func _drop_bomb() -> void:
 	payload.position = player.position + BOMB_DROP_OFFSET
 	add_child(payload)
 
+func _spawn_fuel_tank() -> void:
+	var tank := FUEL_TANK_SCRIPT.new()
+	tank.position = Vector2(FUEL_TANK_SPAWN_X, rng.randf_range(FUEL_TANK_Y_MIN, FUEL_TANK_Y_MAX))
+	var segment = _current_segment()
+	tank.set("fuel_amount", float(segment["fuel_tank_amount"]))
+	add_child(tank)
+
+func _update_fuel_tank_spawns(delta: float) -> void:
+	var segment = _current_segment()
+	var tank_interval := float(segment["fuel_tank_interval"])
+	if tank_interval <= 0.0:
+		return
+	fuel_tank_spawn_remaining = maxf(0.0, fuel_tank_spawn_remaining - delta)
+	if fuel_tank_spawn_remaining <= 0.0:
+		_spawn_fuel_tank()
+		fuel_tank_spawn_remaining = tank_interval
+
 func _update_combat_state() -> void:
 	if not game_state.run_started or not game_state.is_alive or game_state.is_paused:
 		return
@@ -119,6 +148,7 @@ func _update_combat_state() -> void:
 	var enemy_nodes := get_tree().get_nodes_in_group("enemy_targets")
 	var bolt_nodes := get_tree().get_nodes_in_group("laser_bolts")
 	var bomb_nodes := get_tree().get_nodes_in_group("bomb_payloads")
+	var fuel_tank_nodes := get_tree().get_nodes_in_group("fuel_tanks")
 
 	for enemy_node in enemy_nodes:
 		if enemy_node == null or not enemy_node.has_method("apply_hit"):
@@ -162,6 +192,17 @@ func _update_combat_state() -> void:
 					bomb_node.queue_free()
 					break
 
+	for fuel_tank_node in fuel_tank_nodes:
+		if fuel_tank_node == null:
+			continue
+		var tank_radius := float(fuel_tank_node.get("hit_radius"))
+		if fuel_tank_node.position.distance_to(player.position) <= (tank_radius + PLAYER_HIT_RADIUS):
+			var fuel_gain := float(fuel_tank_node.get("fuel_amount"))
+			game_state.add_fuel(fuel_gain)
+			last_action_text = "Fuel tank collected (+%d)" % int(fuel_gain)
+			action_label.text = "Last Action: %s" % last_action_text
+			fuel_tank_node.queue_free()
+
 func _set_actor_activity(is_active: bool) -> void:
 	for bolt_node in get_tree().get_nodes_in_group("laser_bolts"):
 		if bolt_node != null:
@@ -169,6 +210,9 @@ func _set_actor_activity(is_active: bool) -> void:
 	for bomb_node in get_tree().get_nodes_in_group("bomb_payloads"):
 		if bomb_node != null:
 			bomb_node.set("is_active", is_active)
+	for fuel_tank_node in get_tree().get_nodes_in_group("fuel_tanks"):
+		if fuel_tank_node != null:
+			fuel_tank_node.set("is_active", is_active)
 	for enemy_node in get_tree().get_nodes_in_group("enemy_targets"):
 		if enemy_node != null:
 			enemy_node.set("is_active", is_active)
@@ -178,8 +222,86 @@ func _clear_combat_nodes() -> void:
 		bolt_node.queue_free()
 	for bomb_node in get_tree().get_nodes_in_group("bomb_payloads"):
 		bomb_node.queue_free()
+	for fuel_tank_node in get_tree().get_nodes_in_group("fuel_tanks"):
+		fuel_tank_node.queue_free()
 	for enemy_node in get_tree().get_nodes_in_group("enemy_targets"):
 		enemy_node.queue_free()
+
+func _build_stage_segments() -> void:
+	stage_segments = [
+		{
+			"segment_name": "Sector 1: Open Sky",
+			"length_px": 2400.0,
+			"enemy_spawn_interval": 1.15,
+			"enemy_spawn_variance": 0.20,
+			"ground_target_chance": 0.30,
+			"air_speed_min": 120.0,
+			"air_speed_max": 185.0,
+			"ground_speed_min": 90.0,
+			"ground_speed_max": 125.0,
+			"fuel_tank_interval": 7.0,
+			"fuel_tank_amount": 24.0
+		},
+		{
+			"segment_name": "Sector 2: Canyon",
+			"length_px": 2600.0,
+			"enemy_spawn_interval": 0.95,
+			"enemy_spawn_variance": 0.22,
+			"ground_target_chance": 0.45,
+			"air_speed_min": 135.0,
+			"air_speed_max": 205.0,
+			"ground_speed_min": 100.0,
+			"ground_speed_max": 140.0,
+			"fuel_tank_interval": 5.5,
+			"fuel_tank_amount": 22.0
+		},
+		{
+			"segment_name": "Sector 3: Fortress Run",
+			"length_px": 3000.0,
+			"enemy_spawn_interval": 0.82,
+			"enemy_spawn_variance": 0.18,
+			"ground_target_chance": 0.55,
+			"air_speed_min": 150.0,
+			"air_speed_max": 220.0,
+			"ground_speed_min": 110.0,
+			"ground_speed_max": 150.0,
+			"fuel_tank_interval": 4.8,
+			"fuel_tank_amount": 20.0
+		}
+	]
+
+func _reset_run_progression() -> void:
+	current_segment_index = 0
+	run_distance = 0.0
+	var segment = _current_segment()
+	segment_distance_remaining = float(segment["length_px"])
+	enemy_spawn_remaining = float(segment["enemy_spawn_interval"])
+	fuel_tank_spawn_remaining = float(segment["fuel_tank_interval"])
+	game_state.set_stage(1)
+	last_action_text = "Entered %s" % String(segment["segment_name"])
+	action_label.text = "Last Action: %s" % last_action_text
+
+func _current_segment():
+	if stage_segments.is_empty():
+		_build_stage_segments()
+	return stage_segments[min(current_segment_index, stage_segments.size() - 1)]
+
+func _update_stage_progress(delta: float) -> void:
+	var progress := STAGE_SCROLL_SPEED * delta
+	run_distance += progress
+	segment_distance_remaining = maxf(0.0, segment_distance_remaining - progress)
+	if segment_distance_remaining <= 0.0:
+		_advance_segment()
+
+func _advance_segment() -> void:
+	current_segment_index = min(current_segment_index + 1, stage_segments.size() - 1)
+	var segment = _current_segment()
+	segment_distance_remaining = float(segment["length_px"])
+	enemy_spawn_remaining = minf(enemy_spawn_remaining, float(segment["enemy_spawn_interval"]))
+	fuel_tank_spawn_remaining = minf(fuel_tank_spawn_remaining, float(segment["fuel_tank_interval"]))
+	game_state.set_stage(current_segment_index + 1)
+	last_action_text = "Entered %s" % String(segment["segment_name"])
+	action_label.text = "Last Action: %s" % last_action_text
 
 func _on_respawned() -> void:
 	player.position = Vector2(120, 320)
@@ -198,7 +320,11 @@ func _update_hud() -> void:
 	_update_info_label()
 
 func _update_info_label() -> void:
-	info_label.text = "Enter=start, Esc=pause, Z=fire (air), X=drop bomb (ground), R=manual refuel"
+	var segment = _current_segment()
+	info_label.text = "Stage %d - %s | Enter=start, Esc=pause, Z=fire (air), X=drop bomb (ground), R=manual refuel" % [
+		game_state.stage_id,
+		String(segment["segment_name"])
+	]
 
 func _update_input_debug() -> void:
 	var pressed_actions: Array[String] = []
