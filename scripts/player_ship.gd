@@ -1,7 +1,7 @@
 extends Node2D
 class_name PlayerShip
 
-@export var speed := 260.0
+@export var speed := 300.0
 @export var bounds := Rect2(Vector2(40, 120), Vector2(880, 420))
 
 var input_vector := Vector2.ZERO

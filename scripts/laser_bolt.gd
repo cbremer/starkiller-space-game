@@ -1,7 +1,7 @@
 extends Node2D
 class_name LaserBolt
 
-@export var speed := 520.0
+@export var speed := 680.0
 @export var hit_radius := 10.0
 
 var is_active := true

@@ -3,8 +3,8 @@ class_name EnemyTarget
 
 @export var speed := 120.0
 @export var hit_radius := 16.0
-@export var laser_points := 100
-@export var bomb_points := 60
+@export var laser_points := 45
+@export var bomb_points := 25
 
 var is_active := true
 var _destroyed := false

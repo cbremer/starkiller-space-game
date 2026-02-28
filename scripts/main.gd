@@ -1,15 +1,18 @@
 extends Node2D
 
-const FUEL_DRAIN_PER_SECOND := 11.0
-const REFUEL_PER_SECOND := 38.0
+const FUEL_DRAIN_PER_SECOND := 9.0
+const REFUEL_PER_SECOND := 32.0
 const REFUEL_RECT := Rect2(Vector2(15, 170), Vector2(130, 260))
 const BOLT_SPAWN_OFFSET := Vector2(22, 0)
-const BOMB_COOLDOWN := 1.5
-const BOMB_RADIUS := 145.0
-const ENEMY_SPAWN_INTERVAL := 1.3
+const BOMB_COOLDOWN := 2.4
+const BOMB_RADIUS := 120.0
+const ENEMY_SPAWN_INTERVAL := 1.05
+const ENEMY_SPAWN_VARIANCE := 0.22
 const ENEMY_SPAWN_X := 1060.0
 const ENEMY_SPAWN_Y_MIN := 130.0
 const ENEMY_SPAWN_Y_MAX := 530.0
+const ENEMY_SPEED_MIN := 130.0
+const ENEMY_SPEED_MAX := 205.0
 const PLAYER_HIT_RADIUS := 16.0
 const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
 const BOMB_BLAST_SCRIPT := preload("res://scripts/bomb_blast.gd")
@@ -53,7 +56,6 @@ func _process(delta: float) -> void:
 		_update_enemy_spawns(delta)
 		if Input.is_action_just_pressed("fire"):
 			game_state.register_action("Fire")
-			game_state.add_score(10)
 			_spawn_bolt()
 		if Input.is_action_just_pressed("bomb"):
 			_try_trigger_bomb()
@@ -85,13 +87,14 @@ func _spawn_bolt() -> void:
 func _spawn_enemy() -> void:
 	var enemy := ENEMY_TARGET_SCRIPT.new()
 	enemy.position = Vector2(ENEMY_SPAWN_X, rng.randf_range(ENEMY_SPAWN_Y_MIN, ENEMY_SPAWN_Y_MAX))
+	enemy.set("speed", rng.randf_range(ENEMY_SPEED_MIN, ENEMY_SPEED_MAX))
 	add_child(enemy)
 
 func _update_enemy_spawns(delta: float) -> void:
 	enemy_spawn_remaining = maxf(0.0, enemy_spawn_remaining - delta)
 	if enemy_spawn_remaining <= 0.0:
 		_spawn_enemy()
-		enemy_spawn_remaining = ENEMY_SPAWN_INTERVAL
+		enemy_spawn_remaining = ENEMY_SPAWN_INTERVAL + rng.randf_range(-ENEMY_SPAWN_VARIANCE, ENEMY_SPAWN_VARIANCE)
 
 func _try_trigger_bomb() -> void:
 	if bomb_cooldown_remaining > 0.0:
@@ -99,8 +102,7 @@ func _try_trigger_bomb() -> void:
 		action_label.text = "Last Action: %s" % last_action_text
 		return
 	game_state.register_action("Bomb")
-	game_state.add_score(25)
-	game_state.add_fuel(12.0)
+	game_state.add_fuel(6.0)
 	bomb_cooldown_remaining = BOMB_COOLDOWN
 	var blast := BOMB_BLAST_SCRIPT.new()
 	blast.position = player.position
