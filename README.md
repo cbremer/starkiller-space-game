@@ -38,3 +38,12 @@ Current prototype is a keyboard-first, Scramble-style horizontal shooter slice w
 
 - Visuals and effects are intentionally placeholder-focused.
 - Current target is mechanics validation and tuning, not art/audio fidelity.
+
+## Documentation
+
+Project documentation now follows a project-scoped docs convention:
+
+- Docs index: `docs/README.md`
+- Project docs entrypoint: `docs/project-starkiller-prototype/README.md`
+- Canonical spec: `docs/project-starkiller-prototype/2026-02-28-spec-starkiller-prototype-v1.md`
+- Canonical tasks: `docs/project-starkiller-prototype/2026-02-28-tasks-session-01-05-roadmap.md`
