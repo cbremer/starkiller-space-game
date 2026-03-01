@@ -19,6 +19,7 @@ Covers:
 - Required input actions exist in `InputMap`.
 - `GameState` start/pause/death/respawn transitions.
 - Enemy hit rules: laser vs air, bomb vs ground, bomb vs air.
+- Stage segment resource exists and returns a non-empty normalized segment list.
 
 ## Manual Gameplay Checks
 

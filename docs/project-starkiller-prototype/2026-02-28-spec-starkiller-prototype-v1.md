@@ -46,7 +46,7 @@
 
 ## Session Notes (2026-03-01)
 
-### Implemented (Sessions 1-6)
+### Implemented (Sessions 1-8, current)
 - Godot project scaffold with startup scene (`scenes/Main.tscn`) and Godot 4.6.1 compatibility fixes.
 - Required keyboard input actions with defaults: arrows, `Z`, `X`, `Enter`, `Esc`.
 - Prototype `refuel` action on `R` retained for quick fuel-loop validation.
@@ -83,6 +83,10 @@
 - Session 7 regression closeout:
   - explicit startup window-mode default (`display/window/size/mode=0`, windowed),
   - regression checks rerun and kept green.
+- Session 8 foundation (in progress):
+  - stage segment data externalized to `assets/data/stage_segments.tres`,
+  - resource-driven loading with fallback defaults in `scripts/main.gd`,
+  - regression coverage expanded for segment settings normalization/fallback.
 
 ### Confirmed behavior in current prototype
 - Multi-input combinations are visible through on-screen pressed-action debug text.
@@ -94,16 +98,15 @@
 - Remapped controls persist across restarts.
 - Bombs can damage flying enemies via direct contact and terrain-impact blast radius.
 - Headless checks currently pass:
-  - `tests/run_tests.gd` (8 passed, 0 failed),
+  - `tests/run_tests.gd` (10 passed, 0 failed),
   - `scripts/smoke_test.gd` (pass).
 
 ### Open assumptions and active gaps (Post-Session 7)
 - Terrain geometry and terrain collision are still placeholder-driven.
-- Stage segments are data-driven but currently script-local (not externalized resources yet).
 - Art direction baseline is established, but production-quality asset pipeline decisions are not finalized.
 - Human validation backlog (pacing/usability/bug-bash triage) is explicitly deferred to Session 8 kickoff manual playtesting.
 
-### Active next phase (Session 8 planning)
-- Externalize stage segment definitions from `main.gd` into project resources.
+### Active next phase (Session 8 execution)
+- Run deferred manual validation backlog at Session 8 kickoff and prioritize resulting defects.
 - Begin replacing placeholder-driven terrain behavior with more explicit data/geometry rules.
-- Run deferred manual validation backlog at Session 8 kickoff and prioritize any resulting defects.
+- Continue hardening resource-driven stage data flow and supporting tests.

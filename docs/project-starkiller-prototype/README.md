@@ -4,7 +4,7 @@ This folder is the canonical documentation for the current Starkiller Space Game
 
 ## Current Status
 
-Prototype completed Session 7 regression-hardening closeout. Startup mode defaults are now explicit (windowed), automated checks are green, and manual playtest validation is queued for Session 8 kickoff.
+Session 8 is now active. Stage segment configuration has started moving from hardcoded script data into resources, and deferred manual validation is queued for kickoff playtesting.
 
 ## Timeline
 
@@ -17,6 +17,7 @@ Prototype completed Session 7 regression-hardening closeout. Startup mode defaul
 | 2026-02-28 | Tasks | `2026-02-28-tasks-session-06-upscale-fidelity.md` | Session 6 baseline upscale/fidelity execution record |
 | 2026-03-01 | Brainstorm | `2026-03-01-brainstorm-high-fidelity-visual-exploration.md` | Inspiration archive + concept asset lab setup |
 | 2026-03-01 | Tasks | `2026-03-01-tasks-session-07-regression-hardening.md` | Session 7 closeout tracker (manual validation deferred to Session 8 kickoff) |
+| 2026-03-01 | Tasks | `2026-03-01-tasks-session-08-stage-data-and-validation-kickoff.md` | Active Session 8 tracker (stage-data externalization + validation kickoff) |
 
 ## Naming Convention
 

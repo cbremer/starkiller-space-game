@@ -28,6 +28,8 @@ const SFX_SYNTH_SCRIPT := preload("res://scripts/sfx_synth.gd")
 const PARALLAX_BACKGROUND_SCRIPT := preload("res://scripts/parallax_background.gd")
 const TERRAIN_BAND_SCRIPT := preload("res://scripts/terrain_band.gd")
 const CEILING_BAND_SCRIPT := preload("res://scripts/ceiling_band.gd")
+const STAGE_SEGMENT_SETTINGS_SCRIPT := preload("res://scripts/stage_segment_settings.gd")
+const STAGE_SEGMENTS_RESOURCE_PATH := "res://assets/data/stage_segments.tres"
 const BOMB_GROUND_BLAST_RADIUS := 92.0
 const MAJOR_SHAKE_STRENGTH := 8.0
 const MINOR_SHAKE_STRENGTH := 4.0
@@ -98,7 +100,7 @@ var screen_shake_remaining := 0.0
 func _ready() -> void:
 	rng.randomize()
 	_create_world_layers()
-	_build_stage_segments()
+	_load_stage_segments()
 	_ensure_fullscreen_input_action()
 	_load_input_bindings()
 	game_state.changed.connect(_update_hud)
@@ -572,48 +574,15 @@ func _terrain_height_at(screen_x: float) -> float:
 func _spawn_x() -> float:
 	return get_viewport_rect().size.x + SPAWN_MARGIN_X
 
-func _build_stage_segments() -> void:
-	stage_segments = [
-		{
-			"segment_name": "Sector 1: Open Sky",
-			"length_px": 2400.0,
-			"enemy_spawn_interval": 1.15,
-			"enemy_spawn_variance": 0.20,
-			"ground_target_chance": 0.30,
-			"air_speed_min": 120.0,
-			"air_speed_max": 185.0,
-			"ground_speed_min": 90.0,
-			"ground_speed_max": 125.0,
-			"fuel_tank_interval": 7.0,
-			"fuel_tank_amount": 24.0
-		},
-		{
-			"segment_name": "Sector 2: Canyon",
-			"length_px": 2600.0,
-			"enemy_spawn_interval": 0.95,
-			"enemy_spawn_variance": 0.22,
-			"ground_target_chance": 0.45,
-			"air_speed_min": 135.0,
-			"air_speed_max": 205.0,
-			"ground_speed_min": 100.0,
-			"ground_speed_max": 140.0,
-			"fuel_tank_interval": 5.5,
-			"fuel_tank_amount": 22.0
-		},
-		{
-			"segment_name": "Sector 3: Fortress Run",
-			"length_px": 3000.0,
-			"enemy_spawn_interval": 0.82,
-			"enemy_spawn_variance": 0.18,
-			"ground_target_chance": 0.55,
-			"air_speed_min": 150.0,
-			"air_speed_max": 220.0,
-			"ground_speed_min": 110.0,
-			"ground_speed_max": 150.0,
-			"fuel_tank_interval": 4.8,
-			"fuel_tank_amount": 20.0
-		}
-	]
+func _load_stage_segments() -> void:
+	stage_segments.clear()
+
+	var loaded_resource := ResourceLoader.load(STAGE_SEGMENTS_RESOURCE_PATH)
+	if loaded_resource != null and loaded_resource.has_method("normalized_segments_or_default"):
+		stage_segments = loaded_resource.call("normalized_segments_or_default")
+
+	if stage_segments.is_empty():
+		stage_segments = STAGE_SEGMENT_SETTINGS_SCRIPT.default_segments()
 
 func _reset_run_progression() -> void:
 	current_segment_index = 0
@@ -628,7 +597,7 @@ func _reset_run_progression() -> void:
 
 func _current_segment():
 	if stage_segments.is_empty():
-		_build_stage_segments()
+		_load_stage_segments()
 	return stage_segments[min(current_segment_index, stage_segments.size() - 1)]
 
 func _update_stage_progress(delta: float) -> void:

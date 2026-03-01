@@ -1,6 +1,7 @@
 extends SceneTree
 
 const GameStateScript := preload("res://scripts/game_state.gd")
+const StageSegmentSettingsScript := preload("res://scripts/stage_segment_settings.gd")
 
 var _passes := 0
 var _failures := 0
@@ -18,6 +19,8 @@ func _run_all() -> void:
 	_run_test("respawn triggers after cooldown when lives remain", _test_respawn_after_cooldown)
 	_run_test("game over at zero lives does not respawn", _test_game_over_at_zero_lives)
 	_run_test("fuel clamped to max", _test_fuel_clamped)
+	_run_test("stage segment settings fallback to defaults", _test_stage_segment_settings_fallback_to_defaults)
+	_run_test("stage segment settings normalize bad values", _test_stage_segment_settings_normalize_bad_values)
 	_run_test("scenario: full lifecycle to game over", _scenario_full_lifecycle_to_game_over)
 	_run_test("scenario: pause freezes fuel drain and then resumes", _scenario_pause_freeze_and_resume)
 
@@ -90,6 +93,47 @@ func _test_fuel_clamped() -> void:
 	state.start_run()
 	state.add_fuel(9999.0)
 	_expect_eq(state.fuel, state.MAX_FUEL, "fuel should not exceed max")
+
+func _test_stage_segment_settings_fallback_to_defaults() -> void:
+	var settings = StageSegmentSettingsScript.new()
+	var empty_segments: Array[Dictionary] = []
+	settings.segments = empty_segments
+	var segments: Array = settings.normalized_segments_or_default()
+	var defaults: Array = StageSegmentSettingsScript.default_segments()
+	_expect_true(not segments.is_empty(), "fallback should produce default stage segments")
+	_expect_eq(segments.size(), defaults.size(), "fallback should match default segment count")
+	_expect_eq(String(segments[0]["segment_name"]), String(defaults[0]["segment_name"]), "fallback should keep default first segment")
+
+func _test_stage_segment_settings_normalize_bad_values() -> void:
+	var settings = StageSegmentSettingsScript.new()
+	var malformed_segments: Array[Dictionary] = [{
+		"segment_name": "Stress Segment",
+		"length_px": -5.0,
+		"enemy_spawn_interval": 0.0,
+		"enemy_spawn_variance": -2.0,
+		"ground_target_chance": 3.0,
+		"air_speed_min": "invalid",
+		"air_speed_max": 5.0,
+		"ground_speed_min": -2.0,
+		"ground_speed_max": 1.0,
+		"fuel_tank_interval": -0.5,
+		"fuel_tank_amount": -8.0
+	}]
+	settings.segments = malformed_segments
+	var segments: Array = settings.normalized_segments()
+	_expect_eq(segments.size(), 1, "normalization should keep valid dictionary entries")
+	var segment: Dictionary = segments[0]
+	_expect_eq(String(segment["segment_name"]), "Stress Segment", "segment name should be preserved")
+	_expect_true(float(segment["length_px"]) >= 100.0, "length should clamp to a positive minimum")
+	_expect_true(float(segment["enemy_spawn_interval"]) >= 0.1, "spawn interval should clamp to a safe minimum")
+	_expect_true(float(segment["enemy_spawn_variance"]) >= 0.0, "spawn variance should not be negative")
+	_expect_true(float(segment["ground_target_chance"]) <= 1.0 and float(segment["ground_target_chance"]) >= 0.0, "ground chance should clamp to [0,1]")
+	_expect_true(float(segment["air_speed_min"]) >= 10.0, "air speed minimum should be sanitized")
+	_expect_true(float(segment["air_speed_max"]) >= 10.0, "air speed maximum should be sanitized")
+	_expect_true(float(segment["ground_speed_min"]) >= 10.0, "ground speed minimum should be sanitized")
+	_expect_true(float(segment["ground_speed_max"]) >= 10.0, "ground speed maximum should be sanitized")
+	_expect_eq(float(segment["fuel_tank_interval"]), 0.0, "fuel tank interval should clamp to zero minimum")
+	_expect_eq(float(segment["fuel_tank_amount"]), 0.0, "fuel amount should clamp to zero minimum")
 
 func _scenario_full_lifecycle_to_game_over() -> void:
 	var state = GameStateScript.new()

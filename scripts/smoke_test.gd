@@ -2,6 +2,8 @@ extends SceneTree
 
 const GAME_STATE_SCRIPT := preload("res://scripts/game_state.gd")
 const ENEMY_TARGET_SCRIPT := preload("res://scripts/enemy_target.gd")
+const STAGE_SEGMENT_SETTINGS_SCRIPT := preload("res://scripts/stage_segment_settings.gd")
+const STAGE_SEGMENTS_RESOURCE_PATH := "res://assets/data/stage_segments.tres"
 const REQUIRED_ACTIONS: Array[String] = [
 	"move_up",
 	"move_down",
@@ -20,6 +22,7 @@ func _initialize() -> void:
 	_test_input_actions()
 	_test_game_state_transitions()
 	_test_enemy_hit_rules()
+	_test_stage_segment_resource()
 
 	if failures.is_empty():
 		print("Smoke tests passed.")
@@ -103,6 +106,23 @@ func _test_enemy_hit_rules() -> void:
 	_free_node_if_needed(ground_bomb_target)
 	_free_node_if_needed(air_laser_target)
 	_free_node_if_needed(air_bomb_target)
+
+func _test_stage_segment_resource() -> void:
+	if not _assert_script_instantiable(STAGE_SEGMENT_SETTINGS_SCRIPT, "stage_segment_settings.gd"):
+		return
+	var loaded_resource := ResourceLoader.load(STAGE_SEGMENTS_RESOURCE_PATH)
+	if loaded_resource == null:
+		failures.append("Missing stage segment resource: %s" % STAGE_SEGMENTS_RESOURCE_PATH)
+		return
+	if not loaded_resource.has_method("normalized_segments_or_default"):
+		failures.append("Stage segment resource missing normalized_segments_or_default().")
+		return
+	var segments: Variant = loaded_resource.call("normalized_segments_or_default")
+	if not (segments is Array):
+		failures.append("Stage segment resource did not return an Array.")
+		return
+	if (segments as Array).is_empty():
+		failures.append("Stage segment resource returned an empty segment list.")
 
 func _assert(condition: bool, message: String) -> void:
 	if not condition:
