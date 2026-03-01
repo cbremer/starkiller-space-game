@@ -80,6 +80,7 @@ func _test_enemy_hit_rules() -> void:
 	var ground_laser_target = ENEMY_TARGET_SCRIPT.new()
 	if ground_laser_target == null or not ground_laser_target.has_method("apply_hit"):
 		failures.append("enemy_target.gd instance missing apply_hit.")
+		_free_node_if_needed(ground_laser_target)
 		return
 	ground_laser_target.target_type = "ground"
 	_assert(ground_laser_target.apply_hit("laser") == 0, "Ground target should ignore laser")
@@ -98,6 +99,10 @@ func _test_enemy_hit_rules() -> void:
 	air_bomb_target.target_type = "air"
 	air_bomb_target.bomb_points = 95
 	_assert(air_bomb_target.apply_hit("bomb") == 95, "Air target should accept bomb hits")
+	_free_node_if_needed(ground_laser_target)
+	_free_node_if_needed(ground_bomb_target)
+	_free_node_if_needed(air_laser_target)
+	_free_node_if_needed(air_bomb_target)
 
 func _assert(condition: bool, message: String) -> void:
 	if not condition:
@@ -111,3 +116,7 @@ func _assert_script_instantiable(script_resource: Script, script_name: String) -
 		failures.append("Script failed to compile or instantiate: %s" % script_name)
 		return false
 	return true
+
+func _free_node_if_needed(instance: Variant) -> void:
+	if instance is Node:
+		(instance as Node).free()

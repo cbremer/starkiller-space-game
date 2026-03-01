@@ -62,4 +62,4 @@ Current build feels small and placeholder-heavy because:
 - [x] Introduce sprite placeholders for all core actors.
 - [x] Add effects/audio for fire, bomb, impacts, and destruction.
 - [x] Run readability pass and adjust contrast/color hierarchy (initial pass).
-- [ ] Update docs with final fidelity direction.
+- [x] Update docs with final fidelity direction.
