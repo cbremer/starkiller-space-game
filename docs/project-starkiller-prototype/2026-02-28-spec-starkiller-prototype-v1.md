@@ -83,7 +83,7 @@
 - Session 7 regression closeout:
   - explicit startup window-mode default (`display/window/size/mode=0`, windowed),
   - regression checks rerun and kept green.
-- Session 8 foundation (in progress):
+- Session 8 foundation (complete):
   - stage segment data externalized to `assets/data/stage_segments.tres`,
   - resource-driven loading with fallback defaults in `scripts/main.gd`,
   - regression coverage expanded for segment settings normalization/fallback.
@@ -101,12 +101,13 @@
   - `tests/run_tests.gd` (10 passed, 0 failed),
   - `scripts/smoke_test.gd` (pass).
 
-### Open assumptions and active gaps (Post-Session 7)
+### Open assumptions and active gaps (Post-Session 8)
 - Terrain geometry and terrain collision are still placeholder-driven.
 - Art direction baseline is established, but production-quality asset pipeline decisions are not finalized.
-- Human validation backlog (pacing/usability/bug-bash triage) is explicitly deferred to Session 8 kickoff manual playtesting.
+- Human validation backlog (pacing/usability/bug-bash triage) is now managed via the Session 9 tracker.
 
-### Active next phase (Session 8 execution)
-- Run deferred manual validation backlog at Session 8 kickoff and prioritize resulting defects.
-- Begin replacing placeholder-driven terrain behavior with more explicit data/geometry rules.
-- Continue hardening resource-driven stage data flow and supporting tests.
+### Active next phase (Session 9 execution)
+- Complete deferred manual validation kickoff and work through any follow-up repairs.
+- Introduce stage-specific terrain/geometry rules tied to the resource-driven segment data.
+- Harden pause/remap stability while stage data updates trickle through the run-state loop.
+- Keep docs/tests aligned with Session 9 findings (`docs/project-starkiller-prototype/2026-03-02-tasks-session-09-terrain-drive.md`).

@@ -1,6 +1,6 @@
 extends Node2D
 
-const FUEL_DRAIN_PER_SECOND := 9.0
+const FUEL_DRAIN_PER_SECOND := 5.0
 const REFUEL_PER_SECOND := 32.0
 const REFUEL_RECT := Rect2(Vector2(15, 170), Vector2(130, 260))
 const BOLT_SPAWN_OFFSET := Vector2(22, 0)
