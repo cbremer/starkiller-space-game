@@ -14,7 +14,7 @@ Current prototype is a keyboard-first, Scramble-style horizontal shooter slice w
 Run the headless test suite:
 
 ```bash
-/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/run_tests.gd
+mkdir -p /tmp/starkiller-tests && /Applications/Godot.app/Contents/MacOS/Godot --headless --path . --user-data-dir /tmp/starkiller-tests --log-file /tmp/starkiller-tests/godot.log --script res://tests/run_tests.gd
 ```
 
 Current coverage includes both unit checks and scenario flows for `GameState`:
@@ -62,8 +62,8 @@ Run automated Session 5 smoke checks:
 
 ## Notes
 
-- Visuals and effects are intentionally placeholder-focused.
-- Current target is mechanics validation and tuning, not art/audio fidelity.
+- Core visuals are still placeholder-driven, but Session 6 added baseline sprite/VFX/SFX readability improvements.
+- Current target is Session 7 regression hardening and playtest-driven tuning decisions.
 
 ## Copilot / AI helpers
 
@@ -76,4 +76,5 @@ Project documentation now follows a project-scoped docs convention:
 - Docs index: `docs/README.md`
 - Project docs entrypoint: `docs/project-starkiller-prototype/README.md`
 - Canonical spec: `docs/project-starkiller-prototype/2026-02-28-spec-starkiller-prototype-v1.md`
-- Canonical tasks: `docs/project-starkiller-prototype/2026-02-28-tasks-session-01-05-roadmap.md`
+- Active tasks tracker: `docs/project-starkiller-prototype/2026-03-01-tasks-session-07-regression-hardening.md`
+- Historical roadmap archive: `docs/project-starkiller-prototype/2026-02-28-tasks-session-01-05-roadmap.md`

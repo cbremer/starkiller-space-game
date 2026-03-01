@@ -44,9 +44,9 @@
 - Requirements are specific enough for an AI coding agent to decompose into phased implementation tasks.
 - Core mechanics and control behavior are explicit and testable without additional product clarification.
 
-## Session Notes (2026-02-28)
+## Session Notes (2026-03-01)
 
-### Implemented (Sessions 1-5)
+### Implemented (Sessions 1-6)
 - Godot project scaffold with startup scene (`scenes/Main.tscn`) and Godot 4.6.1 compatibility fixes.
 - Required keyboard input actions with defaults: arrows, `Z`, `X`, `Enter`, `Esc`.
 - Prototype `refuel` action on `R` retained for quick fuel-loop validation.
@@ -70,30 +70,39 @@
 - QoL usability layer:
   - pause menu overlay with instant retry shortcut,
   - fullscreen/windowed toggle on `F11` (plus pause-menu shortcut),
-  - prototype input remap panel for core gameplay actions.
+  - prototype input remap panel for core gameplay actions,
+  - local persistence for remapped controls (`user://settings.cfg`).
 - Session 5 hardening:
-  - local persistence for remapped controls (`user://settings.cfg`),
   - smoke-test script for input/state/combat rules (`scripts/smoke_test.gd`),
   - bomb interactions expanded so bombs can damage both air and ground targets.
+- Session 6 baseline fidelity pass:
+  - 1280x720 gameplay viewport upscaled to 1920x1080 window defaults,
+  - scalable HUD/pause/remap layout pass,
+  - sprite-based placeholders for core actors,
+  - foundational VFX/SFX feedback (impact flash, explosion particles, procedural cues, screen shake).
 
 ### Confirmed behavior in current prototype
 - Multi-input combinations are visible through on-screen pressed-action debug text.
-- Fire and bomb are mechanically distinct and visually distinct.
+- Fire and bomb are mechanically and visually distinct.
 - Bombing flow matches drop-style behavior (forward travel plus gravity fall) rather than radial blast.
 - Stage indicator and segment name update as the run advances through segment distances.
 - Pause menu controls work during active runs (`1` resume, `2` retry, `3` window mode, `4` remap panel).
 - Input remapping can rebind and reset core actions at runtime.
 - Remapped controls persist across restarts.
 - Bombs can damage flying enemies via direct contact and terrain-impact blast radius.
+- Headless checks currently pass:
+  - `tests/run_tests.gd` (8 passed, 0 failed),
+  - `scripts/smoke_test.gd` (pass).
 
-### Open assumptions for next sessions
-- Terrain geometry and terrain collision are still placeholders.
-- Stage segments are data-driven but currently script-local (not externalized assets/resources yet).
-- Art/audio are placeholders and not fidelity targets yet.
+### Open assumptions and active gaps (Session 7)
+- Terrain geometry and terrain collision are still placeholder-driven.
+- Stage segments are data-driven but currently script-local (not externalized resources yet).
+- Art direction baseline is established, but production-quality asset pipeline decisions are not finalized.
+- Human validation backlog remains for pacing, usability preferences, and focused bug-bash triage.
+- Startup default preference (fullscreen vs windowed) still needs final decision from playtesting.
 
-### Planned next phase (Session 6)
-- Upscale desktop presentation (larger default resolution + tuned stretch mode/aspect).
-- Improve readability and perceived production quality:
-  - larger, cleaner UI typography/layout,
-  - sprite-based actor replacements for debug-shape visuals,
-  - foundational VFX and SFX pass for combat feedback.
+### Active next phase (Session 7)
+- Complete validation backlog and prioritize issues.
+- Apply top-priority regression fixes within Session 7 scope.
+- Lock startup window mode default and reflect it in config/docs.
+- Keep spec + README + task trackers synchronized.

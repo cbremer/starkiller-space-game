@@ -3,6 +3,12 @@
 Date: 2026-02-28
 Source: Session 5 outcomes + current prototype presentation gaps
 
+## Status
+
+- Session 6 baseline pass completed.
+- Remaining human follow-up decisions (style direction validation and startup fullscreen/windowed preference) are tracked in:
+  - `docs/project-starkiller-prototype/2026-03-01-tasks-session-07-regression-hardening.md`
+
 ## Goal
 
 Make the game read as a larger, clearer desktop experience and reduce prototype-level lo-fi presentation.
