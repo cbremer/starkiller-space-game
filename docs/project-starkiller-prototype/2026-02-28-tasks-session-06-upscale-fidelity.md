@@ -59,7 +59,7 @@ Current build feels small and placeholder-heavy because:
 
 - [x] Set display defaults (window override + stretch policy, fullscreen preference still pending).
 - [x] Rework UI anchors/sizing for scalable layouts (initial pass).
-- [ ] Introduce sprite placeholders for all core actors.
-- [ ] Add effects/audio for fire, bomb, impacts, and destruction.
-- [ ] Run readability pass and adjust contrast/color hierarchy.
+- [x] Introduce sprite placeholders for all core actors.
+- [x] Add effects/audio for fire, bomb, impacts, and destruction.
+- [x] Run readability pass and adjust contrast/color hierarchy (initial pass).
 - [ ] Update docs with final fidelity direction.
