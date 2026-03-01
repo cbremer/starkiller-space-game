@@ -584,6 +584,14 @@ func _load_stage_segments() -> void:
 	if stage_segments.is_empty():
 		stage_segments = STAGE_SEGMENT_SETTINGS_SCRIPT.default_segments()
 
+func _apply_segment_visuals(segment: Dictionary) -> void:
+	if background_layer != null:
+		background_layer.call("set_palette_override", segment.get("sky_palette", {}))
+	if ceiling_layer != null:
+		ceiling_layer.call("set_profile_override", segment.get("ceiling_profile", {}))
+	if terrain_layer != null:
+		terrain_layer.call("set_profile_override", segment.get("terrain_profile", {}))
+
 func _reset_run_progression() -> void:
 	current_segment_index = 0
 	run_distance = 0.0
@@ -594,6 +602,7 @@ func _reset_run_progression() -> void:
 	game_state.set_stage(1)
 	last_action_text = "Entered %s" % String(segment["segment_name"])
 	action_label.text = "Last Action: %s" % last_action_text
+	_apply_segment_visuals(segment)
 
 func _current_segment():
 	if stage_segments.is_empty():
@@ -616,6 +625,7 @@ func _advance_segment() -> void:
 	game_state.set_stage(current_segment_index + 1)
 	last_action_text = "Entered %s" % String(segment["segment_name"])
 	action_label.text = "Last Action: %s" % last_action_text
+	_apply_segment_visuals(segment)
 
 func _on_respawned() -> void:
 	player.position = Vector2(120, 320)
