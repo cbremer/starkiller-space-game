@@ -16,6 +16,7 @@ starkiller-space-game/
 ├── docs/
 │   ├── README.md
 │   ├── art-direction/
+│   │   ├── README.md
 │   │   ├── inspiration-board.md
 │   │   ├── inspiration-manifest.json
 │   │   └── worktree-plan.md
