@@ -15,6 +15,10 @@ starkiller-space-game/
 ├── README.md
 ├── docs/
 │   ├── README.md
+│   ├── art-direction/
+│   │   ├── inspiration-board.md
+│   │   ├── inspiration-manifest.json
+│   │   └── worktree-plan.md
 │   └── project-starkiller-prototype/
 │       ├── README.md
 │       ├── 2026-02-27-brainstorm-scramble-desktop-discovery.md
@@ -23,6 +27,13 @@ starkiller-space-game/
 ├── scenes/
 ├── scripts/
 └── assets/
+    └── concept_samples/
+        ├── README.md
+        ├── environment_tiles/
+        ├── props/
+        ├── ships/
+        ├── ui/
+        └── vfx/
 ```
 
 ## Docs Conventions
