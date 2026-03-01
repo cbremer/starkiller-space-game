@@ -1,0 +1,31 @@
+{
+  "collection": "starkiller-high-fidelity-inspiration-v1",
+  "source": "user-provided chat attachments",
+  "references": [
+    {
+      "id": "REF-01",
+      "label": "Pixel-art landscape contact sheet",
+      "tags": ["pixel", "scanlines", "neon", "horizon", "retro-future"]
+    },
+    {
+      "id": "REF-02",
+      "label": "Painterly futuristic spaceport city",
+      "tags": ["painterly", "megastructure", "spaceport", "high-detail"]
+    },
+    {
+      "id": "REF-03",
+      "label": "Retro mountain vista with giant sun",
+      "tags": ["pixel", "planet", "landscape", "silhouette"]
+    },
+    {
+      "id": "REF-04",
+      "label": "Terraced geometric garden at sunset",
+      "tags": ["geometric", "architecture", "water", "cinematic"]
+    },
+    {
+      "id": "REF-05",
+      "label": "Lunar outpost with magenta sci-fi structures",
+      "tags": ["moon", "outpost", "magenta", "sci-fi", "structures"]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 512">
+  <defs>
+    <radialGradient id="planetSky" cx="70%" cy="25%" r="70%">
+      <stop offset="0%" stop-color="#ff8e6e"/>
+      <stop offset="50%" stop-color="#7c4bc6"/>
+      <stop offset="100%" stop-color="#0b1027"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="512" fill="url(#planetSky)"/>
+  <circle cx="740" cy="185" r="145" fill="#ffd37f" opacity="0.65"/>
+  <path d="M0 330 C160 260 320 370 510 320 C650 280 790 360 1024 300 L1024 512 L0 512 Z" fill="#1b1f48"/>
+  <ellipse cx="230" cy="390" rx="140" ry="36" fill="#2f3271"/>
+  <ellipse cx="540" cy="410" rx="180" ry="40" fill="#2a2f66"/>
+  <ellipse cx="840" cy="388" rx="120" ry="30" fill="#313975"/>
+</svg>
