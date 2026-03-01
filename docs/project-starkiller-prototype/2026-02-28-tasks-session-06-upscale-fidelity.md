@@ -6,7 +6,7 @@ Source: Session 5 outcomes + current prototype presentation gaps
 ## Status
 
 - Session 6 baseline pass completed.
-- Remaining human follow-up decisions (style direction validation and startup fullscreen/windowed preference) are tracked in:
+- Follow-up validation and polish decisions are tracked in Session 7 closeout notes:
   - `docs/project-starkiller-prototype/2026-03-01-tasks-session-07-regression-hardening.md`
 
 ## Goal
@@ -63,7 +63,7 @@ Current build feels small and placeholder-heavy because:
 
 ## Less-Lo-Fi Checklist (Execution Order)
 
-- [x] Set display defaults (window override + stretch policy, fullscreen preference still pending).
+- [x] Set display defaults (window override + stretch policy; startup mode finalized as windowed in Session 7).
 - [x] Rework UI anchors/sizing for scalable layouts (initial pass).
 - [x] Introduce sprite placeholders for all core actors.
 - [x] Add effects/audio for fire, bomb, impacts, and destruction.

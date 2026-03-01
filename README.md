@@ -7,7 +7,7 @@ Current prototype is a keyboard-first, Scramble-style horizontal shooter slice w
 1. Open this folder in **Godot 4.6.1+**.
 2. Press Play (`F5`) to run `scenes/Main.tscn`.
 3. Press `Enter` to start a run.
-4. Default presentation now uses a 1280x720 gameplay viewport upscaled to a 1920x1080 window.
+4. Default presentation uses a 1280x720 gameplay viewport upscaled to a 1920x1080 window and starts in windowed mode (`F11` toggles fullscreen).
 
 ## Automated Tests
 
@@ -63,7 +63,7 @@ Run automated Session 5 smoke checks:
 ## Notes
 
 - Core visuals are still placeholder-driven, but Session 6 added baseline sprite/VFX/SFX readability improvements.
-- Current target is Session 7 regression hardening and playtest-driven tuning decisions.
+- Session 7 regression-hardening closeout is complete; Session 8 kickoff will focus on deferred manual validation and terrain/stage-data upgrades.
 
 ## Copilot / AI helpers
 
@@ -76,5 +76,5 @@ Project documentation now follows a project-scoped docs convention:
 - Docs index: `docs/README.md`
 - Project docs entrypoint: `docs/project-starkiller-prototype/README.md`
 - Canonical spec: `docs/project-starkiller-prototype/2026-02-28-spec-starkiller-prototype-v1.md`
-- Active tasks tracker: `docs/project-starkiller-prototype/2026-03-01-tasks-session-07-regression-hardening.md`
+- Latest tasks file: `docs/project-starkiller-prototype/2026-03-01-tasks-session-07-regression-hardening.md` (Session 7 closeout)
 - Historical roadmap archive: `docs/project-starkiller-prototype/2026-02-28-tasks-session-01-05-roadmap.md`

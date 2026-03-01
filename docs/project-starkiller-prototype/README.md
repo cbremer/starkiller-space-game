@@ -4,7 +4,7 @@ This folder is the canonical documentation for the current Starkiller Space Game
 
 ## Current Status
 
-Prototype completed the Session 6 baseline upscale/fidelity pass (resolution scaling, sprite placeholders, VFX/SFX, and remap persistence) and is currently in Session 7 regression hardening.
+Prototype completed Session 7 regression-hardening closeout. Startup mode defaults are now explicit (windowed), automated checks are green, and manual playtest validation is queued for Session 8 kickoff.
 
 ## Timeline
 
@@ -16,7 +16,7 @@ Prototype completed the Session 6 baseline upscale/fidelity pass (resolution sca
 | 2026-02-28 | Tasks | `2026-02-28-tasks-session-05-regression-checklist.md` | Session 5 smoke test command + manual regression checklist |
 | 2026-02-28 | Tasks | `2026-02-28-tasks-session-06-upscale-fidelity.md` | Session 6 baseline upscale/fidelity execution record |
 | 2026-03-01 | Brainstorm | `2026-03-01-brainstorm-high-fidelity-visual-exploration.md` | Inspiration archive + concept asset lab setup |
-| 2026-03-01 | Tasks | `2026-03-01-tasks-session-07-regression-hardening.md` | Active tracker for validation backlog + regression hardening |
+| 2026-03-01 | Tasks | `2026-03-01-tasks-session-07-regression-hardening.md` | Session 7 closeout tracker (manual validation deferred to Session 8 kickoff) |
 
 ## Naming Convention
 
