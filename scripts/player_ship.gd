@@ -1,12 +1,23 @@
 extends Node2D
 class_name PlayerShip
 
+const PLACEHOLDER_TEXTURES := preload("res://scripts/placeholder_textures.gd")
+
 @export var speed := 300.0
 @export var horizontal_margin := 40.0
 @export var top_margin := 52.0
 @export var bottom_margin := 28.0
+@export_range(0.5, 2.5, 0.05) var sprite_scale := 1.25
 
 var input_vector := Vector2.ZERO
+var _sprite: Sprite2D
+
+func _ready() -> void:
+	_sprite = Sprite2D.new()
+	_sprite.texture = PLACEHOLDER_TEXTURES.ship_texture()
+	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_sprite.scale = Vector2.ONE * sprite_scale
+	add_child(_sprite)
 
 func _physics_process(delta: float) -> void:
 	input_vector = Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -24,13 +35,3 @@ func _physics_process(delta: float) -> void:
 		clampf(position.x, min_x, max_x),
 		clampf(position.y, min_y, max_y)
 	)
-	queue_redraw()
-
-func _draw() -> void:
-	draw_polygon(PackedVector2Array([
-		Vector2(18, 0),
-		Vector2(-14, -12),
-		Vector2(-6, 0),
-		Vector2(-14, 12)
-	]), PackedColorArray([Color.CYAN]))
-	draw_line(Vector2(-10, 0), Vector2(-18, 0), Color.YELLOW, 2.0)
