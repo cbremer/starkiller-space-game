@@ -80,6 +80,9 @@
   - scalable HUD/pause/remap layout pass,
   - sprite-based placeholders for core actors,
   - foundational VFX/SFX feedback (impact flash, explosion particles, procedural cues, screen shake).
+- Session 7 regression closeout:
+  - explicit startup window-mode default (`display/window/size/mode=0`, windowed),
+  - regression checks rerun and kept green.
 
 ### Confirmed behavior in current prototype
 - Multi-input combinations are visible through on-screen pressed-action debug text.
@@ -94,15 +97,13 @@
   - `tests/run_tests.gd` (8 passed, 0 failed),
   - `scripts/smoke_test.gd` (pass).
 
-### Open assumptions and active gaps (Session 7)
+### Open assumptions and active gaps (Post-Session 7)
 - Terrain geometry and terrain collision are still placeholder-driven.
 - Stage segments are data-driven but currently script-local (not externalized resources yet).
 - Art direction baseline is established, but production-quality asset pipeline decisions are not finalized.
-- Human validation backlog remains for pacing, usability preferences, and focused bug-bash triage.
-- Startup default preference (fullscreen vs windowed) still needs final decision from playtesting.
+- Human validation backlog (pacing/usability/bug-bash triage) is explicitly deferred to Session 8 kickoff manual playtesting.
 
-### Active next phase (Session 7)
-- Complete validation backlog and prioritize issues.
-- Apply top-priority regression fixes within Session 7 scope.
-- Lock startup window mode default and reflect it in config/docs.
-- Keep spec + README + task trackers synchronized.
+### Active next phase (Session 8 planning)
+- Externalize stage segment definitions from `main.gd` into project resources.
+- Begin replacing placeholder-driven terrain behavior with more explicit data/geometry rules.
+- Run deferred manual validation backlog at Session 8 kickoff and prioritize any resulting defects.

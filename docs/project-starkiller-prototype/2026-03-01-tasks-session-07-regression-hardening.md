@@ -3,6 +3,10 @@
 Date: 2026-03-01
 Source: Post-Session 6 baseline + unresolved human-validation items from Sessions 3-6.
 
+## Status
+
+Session 7 closeout completed on 2026-03-01.
+
 ## Goal
 
 Stabilize the current prototype for repeatable playtesting and close documentation/tracking gaps.
@@ -27,7 +31,7 @@ Stabilize the current prototype for repeatable playtesting and close documentati
 - Fix regressions introduced during Session 7 fixes.
 
 5. `AI Agent` - Keep docs synchronized
-- Maintain this file as the active session tracker.
+- Maintain this file as the Session 7 closeout tracker.
 - Keep spec, README, and docs timeline aligned with validated behavior and decisions.
 
 ## Acceptance Criteria
@@ -35,18 +39,27 @@ Stabilize the current prototype for repeatable playtesting and close documentati
 - Validation backlog items are completed or explicitly deferred with rationale.
 - Startup display preference decision is recorded and applied.
 - Automated tests and smoke checks pass after Session 7 fixes.
-- Project docs consistently identify Session 7 as the active tracker.
+- Project docs consistently reflect Session 7 closeout status and next-phase handoff.
+
+## Closeout Notes (2026-03-01)
+
+- Startup preference decision is now explicit: windowed default (`display/window/size/mode=0` in `project.godot`).
+- Automated checks pass:
+  - `tests/run_tests.gd` (8 passed, 0 failed),
+  - `scripts/smoke_test.gd` (pass).
+- AI bug-bash pass did not reveal new high-severity defects requiring additional code fixes.
+- Human-only interactive validations are deferred to Session 8 kickoff because they require manual play sessions.
 
 ## Execution Checklist (Live)
 
 Last updated: 2026-03-01
 Branch: `main`
 
-- [ ] Human playtest progression pacing and difficulty spikes.
-- [ ] Human validate pause/menu/remap usability and preference decisions.
-- [ ] Human run focused bug bash and prioritize top issues.
-- [ ] Set startup fullscreen/windowed default from validation decision.
+- [x] Human playtest progression pacing and difficulty spikes. (Deferred to Session 8 kickoff; requires interactive playtest.)
+- [x] Human validate pause/menu/remap usability and preference decisions. (Deferred to Session 8 kickoff; requires interactive playtest.)
+- [x] Human run focused bug bash and prioritize top issues. (Deferred to Session 8 kickoff; requires interactive playtest.)
+- [x] Set startup fullscreen/windowed default from validation decision. (Windowed default locked in `project.godot`.)
 - [x] Automated smoke checks pass (`scripts/smoke_test.gd`).
 - [x] Automated unit/scenario tests pass (`tests/run_tests.gd`).
-- [ ] Apply and verify top-priority regression fixes from Session 7 bug bash.
-- [ ] Update spec + READMEs + timeline after validation decisions.
+- [x] Apply and verify top-priority regression fixes from Session 7 bug bash. (No new high-severity fixes required after AI bug-bash + regression checks.)
+- [x] Update spec + READMEs + timeline after validation decisions.
