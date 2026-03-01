@@ -3,6 +3,14 @@
 Date: 2026-02-27
 Source: `SPEC.md` + current repo state
 
+## Status
+
+- Historical roadmap archive for Sessions 1-5 planning and execution.
+- Do not use this file as the active tracker.
+- Active tracker: `docs/project-starkiller-prototype/2026-03-01-tasks-session-07-regression-hardening.md`
+- Session 6 detail: `docs/project-starkiller-prototype/2026-02-28-tasks-session-06-upscale-fidelity.md`
+- Remaining open human-validation items from this file were carried into Session 7.
+
 ## Project Stage Assessment
 
 Current progression stage:
@@ -67,7 +75,7 @@ Goal:
 9. `AI Agent` - Update project docs
 - Update documentation (`README.md`, etc.) based on what we've implemented.
 
-## Execution Checklist (Live)
+## Execution Checklist (Historical Snapshot)
 
 Last updated: 2026-02-28 (Session 5 pass)
 Branch: `codex/troubleshoot-gray-screen`
@@ -110,7 +118,7 @@ Branch: `codex/troubleshoot-gray-screen`
 - [ ] Human validate usability and provide preference decisions.
 - [x] Update `SPEC.md` and docs.
 
-## Session 5 Checklist (Current)
+## Session 5 Checklist (Historical)
 
 - [x] Remove known technical debt from earlier sessions (persist input remaps locally).
 - [x] Add lightweight regression checklist/test script for critical loops.
