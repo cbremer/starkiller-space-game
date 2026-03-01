@@ -129,11 +129,6 @@ func _handle_key_event(event: InputEventKey) -> void:
 		_consume_input_event()
 		return
 
-	if event.keycode == KEY_F11:
-		_toggle_fullscreen()
-		_consume_input_event()
-		return
-
 	if not game_state.run_started or not game_state.is_paused:
 		return
 
@@ -727,7 +722,7 @@ func _toggle_fullscreen() -> void:
 	_update_pause_menu()
 
 func _set_pause_ui_visibility() -> void:
-	var pause_visible := game_state.run_started and game_state.is_paused
+	var pause_visible: bool = game_state.run_started and game_state.is_paused
 	pause_menu.visible = pause_visible
 	remap_panel.visible = pause_visible and is_remap_menu_open
 

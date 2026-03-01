@@ -4,7 +4,7 @@ This folder is the canonical documentation for the current Starkiller Space Game
 
 ## Current Status
 
-Prototype is in Session 5 hardening with smoke-test coverage added and input remap persistence implemented.
+Prototype has completed the Session 6 baseline upscale/fidelity pass (resolution scaling, sprite placeholders, VFX/SFX, and remap persistence) and is now in regression hardening.
 
 ## Timeline
 
