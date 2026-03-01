@@ -65,6 +65,10 @@ Run automated Session 5 smoke checks:
 - Visuals and effects are intentionally placeholder-focused.
 - Current target is mechanics validation and tuning, not art/audio fidelity.
 
+## Copilot / AI helpers
+
+- No Copilot-specific configuration file is required. Use the existing project context in this README and `CLAUDE.md` for guidance.
+
 ## Documentation
 
 Project documentation now follows a project-scoped docs convention:
