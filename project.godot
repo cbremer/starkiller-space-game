@@ -28,7 +28,6 @@ window/size/window_height_override=1080
 window/size/mode=0
 window/size/resizable=true
 window/stretch/mode="viewport"
-window/stretch/aspect="keep"
 
 [input]
 

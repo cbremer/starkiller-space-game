@@ -2,7 +2,6 @@ extends Node2D
 
 var _scroll_distance := 0.0
 var _segment_index := 0
-var _override_profile: Dictionary = {}
 
 func set_scroll_distance(distance: float) -> void:
 	_scroll_distance = distance
@@ -10,10 +9,6 @@ func set_scroll_distance(distance: float) -> void:
 
 func set_segment_index(index: int) -> void:
 	_segment_index = max(index, 0)
-	queue_redraw()
-
-func set_profile_override(profile: Dictionary) -> void:
-	_override_profile = profile.duplicate(true)
 	queue_redraw()
 
 func ground_height_at_screen_x(screen_x: float) -> float:
@@ -71,7 +66,4 @@ func _profile_for_segment(index: int) -> Dictionary:
 			"line": Color(0.36, 0.28, 0.44)
 		}
 	]
-	var profile := profiles[min(index, profiles.size() - 1)].duplicate(true)
-	for key in _override_profile.keys():
-		profile[key] = _override_profile[key]
-	return profile
+	return profiles[min(index, profiles.size() - 1)]

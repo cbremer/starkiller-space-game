@@ -2,7 +2,6 @@ extends Node2D
 
 var _scroll_distance := 0.0
 var _segment_index := 0
-var _palette_override: Dictionary = {}
 
 func set_scroll_distance(distance: float) -> void:
 	_scroll_distance = distance
@@ -10,10 +9,6 @@ func set_scroll_distance(distance: float) -> void:
 
 func set_segment_index(index: int) -> void:
 	_segment_index = max(index, 0)
-	queue_redraw()
-
-func set_palette_override(palette: Dictionary) -> void:
-	_palette_override = palette.duplicate(true)
 	queue_redraw()
 
 func _draw() -> void:
@@ -67,7 +62,4 @@ func _palette_for_segment(index: int) -> Dictionary:
 			"mid_hill": Color(0.16, 0.13, 0.22)
 		}
 	]
-	var palette := palettes[min(index, palettes.size() - 1)].duplicate(true)
-	for key in _palette_override.keys():
-		palette[key] = _palette_override[key]
-	return palette
+	return palettes[min(index, palettes.size() - 1)]
