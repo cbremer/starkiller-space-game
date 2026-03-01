@@ -16,6 +16,7 @@ const PLAYER_HIT_RADIUS := 16.0
 const PLAYER_TERRAIN_CLEARANCE := 12.0
 const PLAYER_CEILING_CLEARANCE := 10.0
 const TUNNEL_SPAWN_MARGIN := 40.0
+const GAME_STATE_SCRIPT := preload("res://scripts/game_state.gd")
 const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
 const BOMB_PAYLOAD_SCRIPT := preload("res://scripts/bomb_payload.gd")
 const BOMB_BLAST_SCRIPT := preload("res://scripts/bomb_blast.gd")
@@ -58,7 +59,7 @@ const DEFAULT_KEY_BINDINGS := {
 const INPUT_BINDINGS_SETTINGS_PATH := "user://settings.cfg"
 const INPUT_BINDINGS_SECTION := "input_bindings"
 
-@onready var player: PlayerShip = $PlayerShip
+@onready var player: Node2D = $PlayerShip
 @onready var state_label: Label = $CanvasLayer/HUD/StateLabel
 @onready var input_label: Label = $CanvasLayer/HUD/InputLabel
 @onready var action_label: Label = $CanvasLayer/HUD/ActionLabel
@@ -69,7 +70,7 @@ const INPUT_BINDINGS_SECTION := "input_bindings"
 @onready var remap_status_label: Label = $CanvasLayer/RemapPanel/VBox/RemapStatus
 @onready var remap_list_label: Label = $CanvasLayer/RemapPanel/VBox/RemapList
 
-var game_state := GameState.new()
+var game_state = GAME_STATE_SCRIPT.new()
 var last_action_text := "No actions yet"
 var enemy_spawn_remaining := 1.0
 var fuel_tank_spawn_remaining := 0.0

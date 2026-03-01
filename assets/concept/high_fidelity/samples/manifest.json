@@ -1,0 +1,14 @@
+{
+  "version": "0.1-planning",
+  "generated_assets": [
+    "concept_bg_01_nebula_horizon.svg",
+    "concept_bg_02_planet_sunrise.svg",
+    "concept_bg_03_moon_outpost.svg",
+    "concept_bg_04_futurist_harbor.svg",
+    "concept_bg_05_retro_landscape.svg",
+    "concept_bg_06_orbital_desert.svg",
+    "sample_sprite_sheet_concepts.svg",
+    "sample_tileset_atlas_concepts.svg"
+  ],
+  "notes": "Procedural concept SVG assets for style testing. Planning-only placeholders."
+}

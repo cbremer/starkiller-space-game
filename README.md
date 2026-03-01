@@ -9,6 +9,20 @@ Current prototype is a keyboard-first, Scramble-style horizontal shooter slice w
 3. Press `Enter` to start a run.
 4. Default presentation now uses a 1280x720 gameplay viewport upscaled to a 1920x1080 window.
 
+## Automated Tests
+
+Run the headless test suite:
+
+```bash
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/run_tests.gd
+```
+
+Current coverage includes both unit checks and scenario flows for `GameState`:
+- start/pause behavior
+- fuel drain -> death -> respawn
+- full lifecycle through game over
+- pause freeze and resume behavior
+
 ## Controls (default)
 
 - Move: Arrow keys

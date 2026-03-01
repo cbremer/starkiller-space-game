@@ -15,6 +15,7 @@ Prototype is in Session 5 hardening with smoke-test coverage added and input rem
 | 2026-02-28 | Tasks | `2026-02-28-tasks-session-01-05-roadmap.md` | Session checklist + follow-up roadmap |
 | 2026-02-28 | Tasks | `2026-02-28-tasks-session-05-regression-checklist.md` | Session 5 smoke test command + manual regression checklist |
 | 2026-02-28 | Tasks | `2026-02-28-tasks-session-06-upscale-fidelity.md` | Future phase plan for larger presentation scale and fidelity uplift |
+| 2026-03-01 | Brainstorm | `2026-03-01-brainstorm-high-fidelity-visual-exploration.md` | Inspiration archive + concept asset lab setup |
 
 ## Naming Convention
 
