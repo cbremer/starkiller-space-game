@@ -7,6 +7,9 @@ class_name BombBlast
 
 var _age := 0.0
 
+func _ready() -> void:
+	add_to_group("bomb_blasts")
+
 func _process(delta: float) -> void:
 	_age += delta
 	if _age >= lifetime:

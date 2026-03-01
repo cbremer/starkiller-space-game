@@ -69,7 +69,7 @@ Goal:
 
 ## Execution Checklist (Live)
 
-Last updated: 2026-02-28 (Session 3 pass)
+Last updated: 2026-02-28 (Session 5 pass)
 Branch: `codex/troubleshoot-gray-screen`
 
 - [x] Initialize Godot project scaffold (`project.godot`, `scenes/`, `scripts/`, placeholder assets).
@@ -94,12 +94,28 @@ Branch: `codex/troubleshoot-gray-screen`
 - [x] Add score events tied to enemy kills/interactions.
 - [x] Human playtest pass for Session 2 combat feel and balancing.
 
-## Session 3 Checklist (Current)
+## Session 3 Checklist
 
 - [x] Introduce stage segment data and segment loader logic.
 - [x] Implement scrolling progression and segment transition conditions.
 - [x] Add fuel tank spawn/refuel behavior tied to segment rules.
 - [ ] Human playtest progression pacing and difficulty spikes.
+- [x] Update `SPEC.md` and docs.
+
+## Session 4 Checklist
+
+- [x] Add pause menu with instant retry.
+- [x] Add windowed/fullscreen toggle.
+- [x] Add basic input remapping UI (prototype grade).
+- [ ] Human validate usability and provide preference decisions.
+- [x] Update `SPEC.md` and docs.
+
+## Session 5 Checklist (Current)
+
+- [x] Remove known technical debt from earlier sessions (persist input remaps locally).
+- [x] Add lightweight regression checklist/test script for critical loops.
+- [ ] Human run focused bug bash and prioritize issues.
+- [x] Fix top-priority defects within session budget (ship movement floor + bomb interaction with air/ground).
 - [x] Update `SPEC.md` and docs.
 
 ### Session 1 acceptance criteria
@@ -158,6 +174,22 @@ Tasks:
 3. `Human` - Run a focused bug bash and prioritize issues.
 4. `AI Agent` - Fix top-priority defects within session budget.
 5. `AI Agent` - Update `SPEC.md` and docs.
+
+## Session 6: Upscale + Fidelity Pass
+
+Goal:
+- Increase presentation scale for desktop and reduce placeholder/lo-fi feel.
+
+Tasks:
+1. `AI Agent` - Set explicit display scaling defaults (larger base resolution + stretch policy).
+2. `AI Agent` - Upgrade HUD/menu layout and typography for readable fullscreen/windowed play.
+3. `AI Agent` - Replace core debug-shape visuals with sprite-based placeholders.
+4. `AI Agent` - Add foundational VFX/audio feedback pass.
+5. `Human` - Validate readability, style direction, and upscale defaults.
+6. `AI Agent` - Update `SPEC.md` and docs.
+
+Detail doc:
+- `docs/project-starkiller-prototype/2026-02-28-tasks-session-06-upscale-fidelity.md`
 
 ## Working agreements for each session
 

@@ -46,7 +46,7 @@
 
 ## Session Notes (2026-02-28)
 
-### Implemented (Sessions 1-3)
+### Implemented (Sessions 1-5)
 - Godot project scaffold with startup scene (`scenes/Main.tscn`) and Godot 4.6.1 compatibility fixes.
 - Required keyboard input actions with defaults: arrows, `Z`, `X`, `Enter`, `Esc`.
 - Prototype `refuel` action on `R` retained for quick fuel-loop validation.
@@ -67,14 +67,33 @@
   - segment data model in `main.gd`,
   - distance-based segment advancement,
   - per-segment spawn tuning and fuel-tank cadence.
+- QoL usability layer:
+  - pause menu overlay with instant retry shortcut,
+  - fullscreen/windowed toggle on `F11` (plus pause-menu shortcut),
+  - prototype input remap panel for core gameplay actions.
+- Session 5 hardening:
+  - local persistence for remapped controls (`user://settings.cfg`),
+  - smoke-test script for input/state/combat rules (`scripts/smoke_test.gd`),
+  - bomb interactions expanded so bombs can damage both air and ground targets.
 
 ### Confirmed behavior in current prototype
 - Multi-input combinations are visible through on-screen pressed-action debug text.
 - Fire and bomb are mechanically distinct and visually distinct.
 - Bombing flow matches drop-style behavior (forward travel plus gravity fall) rather than radial blast.
 - Stage indicator and segment name update as the run advances through segment distances.
+- Pause menu controls work during active runs (`1` resume, `2` retry, `3` window mode, `4` remap panel).
+- Input remapping can rebind and reset core actions at runtime.
+- Remapped controls persist across restarts.
+- Bombs can damage flying enemies via direct contact and terrain-impact blast radius.
 
 ### Open assumptions for next sessions
 - Terrain geometry and terrain collision are still placeholders.
 - Stage segments are data-driven but currently script-local (not externalized assets/resources yet).
 - Art/audio are placeholders and not fidelity targets yet.
+
+### Planned next phase (Session 6)
+- Upscale desktop presentation (larger default resolution + tuned stretch mode/aspect).
+- Improve readability and perceived production quality:
+  - larger, cleaner UI typography/layout,
+  - sprite-based actor replacements for debug-shape visuals,
+  - foundational VFX and SFX pass for combat feedback.

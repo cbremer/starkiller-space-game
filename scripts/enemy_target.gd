@@ -27,8 +27,6 @@ func apply_hit(weapon: String) -> int:
 	queue_free()
 	if target_type == "ground" and weapon != "bomb":
 		return 0
-	if target_type == "air" and weapon == "bomb":
-		return 0
 	if weapon == "bomb":
 		return bomb_points
 	return laser_points
