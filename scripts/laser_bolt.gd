@@ -13,7 +13,7 @@ func _process(delta: float) -> void:
 	if not is_active:
 		return
 	position.x += speed * delta
-	if position.x > 1088.0:
+	if position.x > get_viewport_rect().size.x + 8.0:
 		queue_free()
 
 func _draw() -> void:

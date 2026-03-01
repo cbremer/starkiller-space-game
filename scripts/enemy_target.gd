@@ -23,10 +23,10 @@ func _process(delta: float) -> void:
 func apply_hit(weapon: String) -> int:
 	if _destroyed:
 		return 0
-	_destroyed = true
-	queue_free()
 	if target_type == "ground" and weapon != "bomb":
 		return 0
+	_destroyed = true
+	queue_free()
 	if weapon == "bomb":
 		return bomb_points
 	return laser_points

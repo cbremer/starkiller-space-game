@@ -86,6 +86,7 @@ var remap_selected_index := 0
 var is_remap_menu_open := false
 var awaiting_rebind := false
 var remap_status_text := "Use Up/Down to pick an action, Enter to rebind."
+var _suppress_pause_this_frame := false
 
 func _ready() -> void:
 	rng.randomize()
@@ -112,6 +113,7 @@ func _handle_key_event(event: InputEventKey) -> void:
 		if event.keycode == KEY_ESCAPE:
 			awaiting_rebind = false
 			remap_status_text = "Rebind canceled."
+			_suppress_pause_this_frame = true
 		else:
 			_rebind_action(_selected_remap_action(), event)
 			awaiting_rebind = false
@@ -180,7 +182,9 @@ func _process(delta: float) -> void:
 			_start_run()
 
 	if Input.is_action_just_pressed("pause"):
-		if awaiting_rebind:
+		if _suppress_pause_this_frame:
+			_suppress_pause_this_frame = false
+		elif awaiting_rebind:
 			awaiting_rebind = false
 			remap_status_text = "Rebind canceled."
 			_update_remap_panel()
@@ -582,9 +586,13 @@ func _update_hud() -> void:
 
 func _update_info_label() -> void:
 	var segment = _current_segment()
-	var base_text := "Stage %d - %s | Enter=start, Esc=pause, F11=fullscreen, Z=fire (air), X=bomb (ground), R=manual refuel" % [
+	var base_text := "Stage %d - %s | %s=start, %s=pause, F11=fullscreen, %s=fire (air), %s=bomb (ground), R=manual refuel" % [
 		game_state.stage_id,
-		String(segment["segment_name"])
+		String(segment["segment_name"]),
+		_action_binding_text("start"),
+		_action_binding_text("pause"),
+		_action_binding_text("fire"),
+		_action_binding_text("bomb")
 	]
 	if game_state.run_started and game_state.is_paused:
 		info_label.text = "%s | Pause Menu: 1=resume, 2=retry, 3=window mode, 4=remap" % base_text
@@ -623,7 +631,7 @@ func _toggle_fullscreen() -> void:
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	var mode_label := "Windowed" if is_fullscreen_mode else "Fullscreen"
-	last_action_text = "Window mode set to %s" % mode_label
+	last_action_text = "Display mode switched to %s" % mode_label
 	action_label.text = "Last Action: %s" % last_action_text
 	_update_pause_menu()
 

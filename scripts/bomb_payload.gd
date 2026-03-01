@@ -15,7 +15,7 @@ func _process(delta: float) -> void:
 		return
 	velocity.y += gravity * delta
 	position += velocity * delta
-	if position.x > 1100.0 or position.x < -40.0 or position.y > 760.0:
+	if position.x > get_viewport_rect().size.x + 20.0 or position.x < -40.0 or position.y > get_viewport_rect().size.y + 40.0:
 		queue_free()
 
 func _draw() -> void:
