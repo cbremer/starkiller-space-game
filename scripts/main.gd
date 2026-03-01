@@ -20,12 +20,17 @@ const GAME_STATE_SCRIPT := preload("res://scripts/game_state.gd")
 const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
 const BOMB_PAYLOAD_SCRIPT := preload("res://scripts/bomb_payload.gd")
 const BOMB_BLAST_SCRIPT := preload("res://scripts/bomb_blast.gd")
+const IMPACT_FLASH_SCRIPT := preload("res://scripts/impact_flash.gd")
+const EXPLOSION_PARTICLES_SCRIPT := preload("res://scripts/explosion_particles.gd")
 const ENEMY_TARGET_SCRIPT := preload("res://scripts/enemy_target.gd")
 const FUEL_TANK_SCRIPT := preload("res://scripts/fuel_tank.gd")
+const SFX_SYNTH_SCRIPT := preload("res://scripts/sfx_synth.gd")
 const PARALLAX_BACKGROUND_SCRIPT := preload("res://scripts/parallax_background.gd")
 const TERRAIN_BAND_SCRIPT := preload("res://scripts/terrain_band.gd")
 const CEILING_BAND_SCRIPT := preload("res://scripts/ceiling_band.gd")
 const BOMB_GROUND_BLAST_RADIUS := 92.0
+const MAJOR_SHAKE_STRENGTH := 8.0
+const MINOR_SHAKE_STRENGTH := 4.0
 const REMAP_ACTIONS: Array[String] = [
 	"move_up",
 	"move_down",
@@ -87,6 +92,8 @@ var is_remap_menu_open := false
 var awaiting_rebind := false
 var remap_status_text := "Use Up/Down to pick an action, Enter to rebind."
 var _suppress_pause_this_frame := false
+var screen_shake_strength := 0.0
+var screen_shake_remaining := 0.0
 
 func _ready() -> void:
 	rng.randomize()
@@ -96,6 +103,7 @@ func _ready() -> void:
 	_load_input_bindings()
 	game_state.changed.connect(_update_hud)
 	game_state.action_triggered.connect(_on_action_triggered)
+	game_state.player_died.connect(_on_player_died)
 	game_state.player_respawned.connect(_on_respawned)
 	_update_hud()
 	_set_pause_ui_visibility()
@@ -224,10 +232,14 @@ func _process(delta: float) -> void:
 	player.set_physics_process(game_state.run_started and game_state.is_alive and not game_state.is_paused)
 	_set_actor_activity(game_state.run_started and game_state.is_alive and not game_state.is_paused)
 	_update_input_debug()
+	_update_screen_shake(delta)
 
 func _start_run() -> void:
 	game_state.start_run()
 	player.position = Vector2(120, 320)
+	position = Vector2.ZERO
+	screen_shake_strength = 0.0
+	screen_shake_remaining = 0.0
 	_clear_combat_nodes()
 	_reset_run_progression()
 	enemy_spawn_remaining = 0.35
@@ -242,10 +254,70 @@ func _on_action_triggered(action_name: String) -> void:
 	last_action_text = "%s @ %.2fs" % [action_name, Time.get_ticks_msec() / 1000.0]
 	action_label.text = "Last Action: %s" % last_action_text
 
+func _on_player_died() -> void:
+	_play_sfx("death", -4.0, 0.04)
+	_spawn_explosion(player.position, true)
+	_trigger_screen_shake(MAJOR_SHAKE_STRENGTH, 0.22)
+
+func _play_sfx(cue_name: String, volume_db := -8.0, pitch_jitter := 0.06) -> void:
+	var stream: AudioStreamWAV = SFX_SYNTH_SCRIPT.stream_for(cue_name)
+	if stream == null:
+		return
+	var sfx_player := AudioStreamPlayer.new()
+	sfx_player.stream = stream
+	sfx_player.volume_db = volume_db
+	if pitch_jitter > 0.0:
+		sfx_player.pitch_scale = rng.randf_range(1.0 - pitch_jitter, 1.0 + pitch_jitter)
+	add_child(sfx_player)
+	sfx_player.finished.connect(sfx_player.queue_free)
+	sfx_player.play()
+
+func _spawn_impact_flash(world_position: Vector2, radius := 24.0, color := Color(1.0, 0.92, 0.58, 0.8)) -> void:
+	var flash := IMPACT_FLASH_SCRIPT.new()
+	flash.position = world_position
+	flash.set("end_radius", radius)
+	flash.set("fill_color", color)
+	add_child(flash)
+
+func _spawn_explosion(world_position: Vector2, major := false) -> void:
+	var explosion := EXPLOSION_PARTICLES_SCRIPT.new()
+	explosion.position = world_position
+	if major:
+		explosion.set("particle_count", 32)
+		explosion.set("speed_max", 320.0)
+		explosion.set("lifetime", 0.48)
+	add_child(explosion)
+
+func _trigger_screen_shake(strength: float, duration: float) -> void:
+	screen_shake_strength = maxf(screen_shake_strength, strength)
+	screen_shake_remaining = maxf(screen_shake_remaining, duration)
+
+func _update_screen_shake(delta: float) -> void:
+	if screen_shake_remaining <= 0.0 or screen_shake_strength <= 0.0:
+		if position != Vector2.ZERO:
+			position = Vector2.ZERO
+		screen_shake_strength = 0.0
+		screen_shake_remaining = 0.0
+		return
+
+	screen_shake_remaining = maxf(0.0, screen_shake_remaining - delta)
+	screen_shake_strength = maxf(0.0, screen_shake_strength - delta * 28.0)
+	position = Vector2(
+		rng.randf_range(-screen_shake_strength, screen_shake_strength),
+		rng.randf_range(-screen_shake_strength, screen_shake_strength)
+	)
+
+func _handle_player_death(reason_text: String) -> void:
+	game_state.die()
+	last_action_text = reason_text
+	action_label.text = "Last Action: %s" % last_action_text
+
 func _spawn_bolt() -> void:
 	var bolt := LASER_BOLT_SCRIPT.new()
 	bolt.position = player.position + BOLT_SPAWN_OFFSET
 	add_child(bolt)
+	_play_sfx("fire", -12.0, 0.08)
+	_spawn_impact_flash(bolt.position + Vector2(-8.0, 0.0), 16.0, Color(0.95, 0.98, 0.72, 0.7))
 
 func _spawn_enemy() -> void:
 	var segment = _current_segment()
@@ -287,6 +359,7 @@ func _drop_bomb() -> void:
 	var payload := BOMB_PAYLOAD_SCRIPT.new()
 	payload.position = player.position + BOMB_DROP_OFFSET
 	add_child(payload)
+	_play_sfx("bomb_drop", -10.0, 0.04)
 
 func _spawn_fuel_tank() -> void:
 	var spawn_x := _spawn_x()
@@ -324,15 +397,11 @@ func _update_combat_state() -> void:
 	var terrain_height := _terrain_height_at(player.position.x)
 
 	if player.position.y - PLAYER_CEILING_CLEARANCE <= ceiling_height:
-		game_state.die()
-		last_action_text = "Crashed into ceiling"
-		action_label.text = "Last Action: %s" % last_action_text
+		_handle_player_death("Crashed into ceiling")
 		return
 
 	if player.position.y + PLAYER_TERRAIN_CLEARANCE >= terrain_height:
-		game_state.die()
-		last_action_text = "Crashed into terrain"
-		action_label.text = "Last Action: %s" % last_action_text
+		_handle_player_death("Crashed into terrain")
 		return
 
 	for enemy_node in enemy_nodes:
@@ -344,9 +413,7 @@ func _update_combat_state() -> void:
 
 		if enemy_type == "air" and enemy_node.position.distance_to(player.position) <= (enemy_hit_radius + PLAYER_HIT_RADIUS):
 			enemy_node.apply_hit("ship")
-			game_state.die()
-			last_action_text = "Ship hit by enemy"
-			action_label.text = "Last Action: %s" % last_action_text
+			_handle_player_death("Ship hit by enemy")
 			return
 
 		if enemy_type == "air":
@@ -355,11 +422,15 @@ func _update_combat_state() -> void:
 					continue
 				var bolt_hit_radius := float(bolt_node.get("hit_radius"))
 				if bolt_node.position.distance_to(enemy_node.position) <= (bolt_hit_radius + enemy_hit_radius):
+					var impact_position := Vector2(enemy_node.position)
 					var air_points := int(enemy_node.apply_hit("laser"))
 					if air_points > 0:
 						game_state.add_score(air_points)
 						last_action_text = "Air target destroyed"
 						action_label.text = "Last Action: %s" % last_action_text
+						_play_sfx("enemy_destroy", -8.0, 0.12)
+						_spawn_impact_flash(impact_position, 24.0, Color(1.0, 0.9, 0.44, 0.8))
+						_spawn_explosion(impact_position, false)
 					bolt_node.queue_free()
 					break
 
@@ -368,11 +439,16 @@ func _update_combat_state() -> void:
 				continue
 			var bomb_hit_radius := float(bomb_node.get("hit_radius"))
 			if bomb_node.position.distance_to(enemy_node.position) <= (bomb_hit_radius + enemy_hit_radius):
+				var impact_position := Vector2(enemy_node.position)
 				var bomb_points := int(enemy_node.apply_hit("bomb"))
 				if bomb_points > 0:
 					game_state.add_score(bomb_points)
 					last_action_text = "Target bombed"
 					action_label.text = "Last Action: %s" % last_action_text
+					_play_sfx("enemy_destroy", -6.5, 0.14)
+					_spawn_impact_flash(impact_position, 30.0, Color(1.0, 0.7, 0.35, 0.85))
+					_spawn_explosion(impact_position, false)
+					_trigger_screen_shake(MINOR_SHAKE_STRENGTH, 0.1)
 				bomb_node.queue_free()
 				break
 
@@ -387,6 +463,8 @@ func _update_combat_state() -> void:
 			game_state.add_fuel(fuel_gain)
 			last_action_text = "Fuel tank collected (+%d)" % int(fuel_gain)
 			action_label.text = "Last Action: %s" % last_action_text
+			_play_sfx("fuel_pickup", -7.5, 0.07)
+			_spawn_impact_flash(fuel_tank_node.position, 20.0, Color(0.68, 0.96, 0.6, 0.78))
 			fuel_tank_node.queue_free()
 
 func _process_bomb_ground_impacts(enemy_nodes: Array, bomb_nodes: Array) -> void:
@@ -404,6 +482,10 @@ func _detonate_bomb_on_ground(impact_position: Vector2, enemy_nodes: Array) -> v
 	var blast := BOMB_BLAST_SCRIPT.new()
 	blast.position = impact_position
 	add_child(blast)
+	_play_sfx("impact", -5.8, 0.05)
+	_spawn_impact_flash(impact_position, 40.0, Color(1.0, 0.78, 0.45, 0.82))
+	_spawn_explosion(impact_position, true)
+	_trigger_screen_shake(MAJOR_SHAKE_STRENGTH, 0.16)
 
 	var kills := 0
 	for enemy_node in enemy_nodes:
@@ -412,14 +494,18 @@ func _detonate_bomb_on_ground(impact_position: Vector2, enemy_nodes: Array) -> v
 		var enemy_hit_radius := float(enemy_node.get("hit_radius"))
 		if enemy_node.position.distance_to(impact_position) > (BOMB_GROUND_BLAST_RADIUS + enemy_hit_radius):
 			continue
+		var enemy_position := Vector2(enemy_node.position)
 		var points := int(enemy_node.apply_hit("bomb"))
 		if points <= 0:
 			continue
 		game_state.add_score(points)
 		kills += 1
+		_spawn_impact_flash(enemy_position, 24.0, Color(1.0, 0.84, 0.45, 0.72))
+		_spawn_explosion(enemy_position, false)
 
 	if kills > 0:
 		last_action_text = "Bomb strike (%d)" % kills
+		_play_sfx("enemy_destroy", -5.0, 0.1)
 	else:
 		last_action_text = "Bomb impact"
 	action_label.text = "Last Action: %s" % last_action_text
@@ -445,6 +531,8 @@ func _clear_combat_nodes() -> void:
 		bomb_node.queue_free()
 	for blast_node in get_tree().get_nodes_in_group("bomb_blasts"):
 		blast_node.queue_free()
+	for vfx_node in get_tree().get_nodes_in_group("combat_vfx"):
+		vfx_node.queue_free()
 	for fuel_tank_node in get_tree().get_nodes_in_group("fuel_tanks"):
 		fuel_tank_node.queue_free()
 	for enemy_node in get_tree().get_nodes_in_group("enemy_targets"):
@@ -567,6 +655,9 @@ func _advance_segment() -> void:
 
 func _on_respawned() -> void:
 	player.position = Vector2(120, 320)
+	position = Vector2.ZERO
+	screen_shake_strength = 0.0
+	screen_shake_remaining = 0.0
 	last_action_text = "Respawned"
 
 func _update_hud() -> void:
@@ -671,10 +762,14 @@ func _action_binding_text(action_name: String) -> String:
 	return "Unbound"
 
 func _rebind_action(action_name: String, source_event: InputEventKey) -> void:
+	var rebound_keycode := _event_keycode(source_event)
+	if not _is_supported_binding_keycode(rebound_keycode):
+		remap_status_text = "Unsupported key. Use arrows, letters, numbers, Enter/Esc, or F-keys."
+		return
 	InputMap.action_erase_events(action_name)
 	var rebound_event := InputEventKey.new()
-	rebound_event.keycode = _event_keycode(source_event)
-	rebound_event.physical_keycode = source_event.physical_keycode
+	rebound_event.keycode = rebound_keycode
+	rebound_event.physical_keycode = source_event.physical_keycode if source_event.physical_keycode != 0 else rebound_keycode
 	rebound_event.shift_pressed = source_event.shift_pressed
 	rebound_event.ctrl_pressed = source_event.ctrl_pressed
 	rebound_event.alt_pressed = source_event.alt_pressed
@@ -697,32 +792,74 @@ func _reset_action_binding(action_name: String) -> void:
 func _load_input_bindings() -> void:
 	var settings := ConfigFile.new()
 	var load_error := settings.load(INPUT_BINDINGS_SETTINGS_PATH)
-	if load_error != OK:
-		return
+	if load_error == OK:
+		for action_name in REMAP_ACTIONS:
+			var saved_keycode := int(settings.get_value(INPUT_BINDINGS_SECTION, action_name, 0))
+			if not _is_supported_binding_keycode(saved_keycode):
+				continue
+			_set_single_key_binding(action_name, saved_keycode)
+	elif load_error != ERR_FILE_NOT_FOUND:
+		push_warning("Failed to load input bindings (%d)." % load_error)
 
-	for action_name in REMAP_ACTIONS:
-		var saved_keycode := int(settings.get_value(INPUT_BINDINGS_SECTION, action_name, 0))
-		if saved_keycode <= 0:
-			continue
-		InputMap.action_erase_events(action_name)
-		var key_event := InputEventKey.new()
-		key_event.keycode = saved_keycode
-		key_event.physical_keycode = saved_keycode
-		InputMap.action_add_event(action_name, key_event)
+	_ensure_safe_remap_bindings()
 
 func _save_input_bindings() -> void:
 	var settings := ConfigFile.new()
 	for action_name in REMAP_ACTIONS:
 		settings.set_value(INPUT_BINDINGS_SECTION, action_name, _primary_action_keycode(action_name))
-	settings.save(INPUT_BINDINGS_SETTINGS_PATH)
+	var save_error := settings.save(INPUT_BINDINGS_SETTINGS_PATH)
+	if save_error != OK:
+		push_warning("Failed to save input bindings (%d)." % save_error)
+		remap_status_text = "Failed to save bindings (error %d)." % save_error
 
 func _primary_action_keycode(action_name: String) -> int:
 	for action_event in InputMap.action_get_events(action_name):
 		var key_event := action_event as InputEventKey
 		if key_event == null:
 			continue
-		return _event_keycode(key_event)
+		var keycode := _event_keycode(key_event)
+		if _is_supported_binding_keycode(keycode):
+			return keycode
 	return int(DEFAULT_KEY_BINDINGS.get(action_name, 0))
+
+func _set_single_key_binding(action_name: String, keycode: int) -> void:
+	var safe_keycode := int(keycode)
+	if not _is_supported_binding_keycode(safe_keycode):
+		return
+	InputMap.action_erase_events(action_name)
+	var key_event := InputEventKey.new()
+	key_event.keycode = safe_keycode
+	key_event.physical_keycode = safe_keycode
+	InputMap.action_add_event(action_name, key_event)
+
+func _ensure_safe_remap_bindings() -> void:
+	for action_name in REMAP_ACTIONS:
+		var has_valid_binding := false
+		for action_event in InputMap.action_get_events(action_name):
+			var key_event := action_event as InputEventKey
+			if key_event == null:
+				continue
+			if _is_supported_binding_keycode(_event_keycode(key_event)):
+				has_valid_binding = true
+				break
+		if has_valid_binding:
+			continue
+		var default_keycode := int(DEFAULT_KEY_BINDINGS.get(action_name, 0))
+		_set_single_key_binding(action_name, default_keycode)
+
+func _is_supported_binding_keycode(keycode: int) -> bool:
+	if keycode <= 0:
+		return false
+	match keycode:
+		KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE, KEY_TAB, KEY_BACKSPACE, KEY_SPACE:
+			return true
+	if keycode >= KEY_F1 and keycode <= KEY_F12:
+		return true
+	if keycode >= KEY_A and keycode <= KEY_Z:
+		return true
+	if keycode >= KEY_0 and keycode <= KEY_9:
+		return true
+	return false
 
 func _consume_input_event() -> void:
 	get_viewport().set_input_as_handled()

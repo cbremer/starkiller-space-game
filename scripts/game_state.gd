@@ -66,7 +66,7 @@ func die() -> void:
 		return
 	is_alive = false
 	lives -= 1
-	_respawn_remaining = respawn_cooldown
+	_respawn_remaining = respawn_cooldown if lives > 0 else 0.0
 	player_died.emit()
 	changed.emit()
 
