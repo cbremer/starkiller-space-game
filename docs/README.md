@@ -6,6 +6,10 @@ All project documentation lives under `docs/`.
 
 - `project-starkiller-prototype/` - Current Godot prototype docs.
 
+## Related Non-Code Artifacts
+
+- High-fidelity concept assets archive: `assets/concept/high_fidelity/`
+
 ## Naming Convention
 
 Files inside a project folder use:
