@@ -49,7 +49,7 @@ Current coverage includes both unit checks and scenario flows for `GameState`:
   - collectible fuel tanks spawned by stage segment rules.
 - Stage progression shell:
   - distance-based segment transitions,
-  - segment-specific spawn parameters,
+  - segment-specific spawn parameters loaded from resource data (`assets/data/stage_segments.tres`),
   - HUD stage/segment visibility.
 - Prototype input remapping panel for core actions (`move_*`, `fire`, `bomb`, `start`, `pause`) with local persistence.
 - Bombs can damage both ground and air enemies (direct hit and blast radius on terrain impact).
@@ -63,7 +63,7 @@ Run automated Session 5 smoke checks:
 ## Notes
 
 - Core visuals are still placeholder-driven, but Session 6 added baseline sprite/VFX/SFX readability improvements.
-- Session 7 regression-hardening closeout is complete; Session 8 kickoff will focus on deferred manual validation and terrain/stage-data upgrades.
+- Session 7 regression-hardening closeout is complete; Session 8 work is now active for stage-data externalization and deferred manual validation kickoff.
 
 ## Copilot / AI helpers
 
@@ -76,5 +76,5 @@ Project documentation now follows a project-scoped docs convention:
 - Docs index: `docs/README.md`
 - Project docs entrypoint: `docs/project-starkiller-prototype/README.md`
 - Canonical spec: `docs/project-starkiller-prototype/2026-02-28-spec-starkiller-prototype-v1.md`
-- Latest tasks file: `docs/project-starkiller-prototype/2026-03-01-tasks-session-07-regression-hardening.md` (Session 7 closeout)
+- Latest tasks file: `docs/project-starkiller-prototype/2026-03-01-tasks-session-08-stage-data-and-validation-kickoff.md` (active Session 8 tracker)
 - Historical roadmap archive: `docs/project-starkiller-prototype/2026-02-28-tasks-session-01-05-roadmap.md`

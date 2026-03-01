@@ -1,0 +1,88 @@
+extends Resource
+class_name StageSegmentSettings
+
+const DEFAULT_SEGMENTS: Array[Dictionary] = [
+	{
+		"segment_name": "Sector 1: Open Sky",
+		"length_px": 2400.0,
+		"enemy_spawn_interval": 1.15,
+		"enemy_spawn_variance": 0.20,
+		"ground_target_chance": 0.30,
+		"air_speed_min": 120.0,
+		"air_speed_max": 185.0,
+		"ground_speed_min": 90.0,
+		"ground_speed_max": 125.0,
+		"fuel_tank_interval": 7.0,
+		"fuel_tank_amount": 24.0
+	},
+	{
+		"segment_name": "Sector 2: Canyon",
+		"length_px": 2600.0,
+		"enemy_spawn_interval": 0.95,
+		"enemy_spawn_variance": 0.22,
+		"ground_target_chance": 0.45,
+		"air_speed_min": 135.0,
+		"air_speed_max": 205.0,
+		"ground_speed_min": 100.0,
+		"ground_speed_max": 140.0,
+		"fuel_tank_interval": 5.5,
+		"fuel_tank_amount": 22.0
+	},
+	{
+		"segment_name": "Sector 3: Fortress Run",
+		"length_px": 3000.0,
+		"enemy_spawn_interval": 0.82,
+		"enemy_spawn_variance": 0.18,
+		"ground_target_chance": 0.55,
+		"air_speed_min": 150.0,
+		"air_speed_max": 220.0,
+		"ground_speed_min": 110.0,
+		"ground_speed_max": 150.0,
+		"fuel_tank_interval": 4.8,
+		"fuel_tank_amount": 20.0
+	}
+]
+
+@export var segments: Array[Dictionary] = []
+
+func normalized_segments() -> Array[Dictionary]:
+	var normalized: Array[Dictionary] = []
+	for raw_segment in segments:
+		if typeof(raw_segment) != TYPE_DICTIONARY:
+			continue
+		normalized.append(_normalize_segment(raw_segment))
+	return normalized
+
+func normalized_segments_or_default() -> Array[Dictionary]:
+	var normalized := normalized_segments()
+	if not normalized.is_empty():
+		return normalized
+	return default_segments()
+
+static func default_segments() -> Array[Dictionary]:
+	var copy: Array[Dictionary] = []
+	for segment in DEFAULT_SEGMENTS:
+		copy.append(segment.duplicate(true))
+	return copy
+
+func _normalize_segment(raw_segment: Dictionary) -> Dictionary:
+	var ground_target_chance := _to_float_or(raw_segment.get("ground_target_chance"), 0.40)
+	return {
+		"segment_name": String(raw_segment.get("segment_name", "Unnamed Sector")),
+		"length_px": maxf(_to_float_or(raw_segment.get("length_px"), 2400.0), 100.0),
+		"enemy_spawn_interval": maxf(_to_float_or(raw_segment.get("enemy_spawn_interval"), 1.0), 0.1),
+		"enemy_spawn_variance": maxf(_to_float_or(raw_segment.get("enemy_spawn_variance"), 0.2), 0.0),
+		"ground_target_chance": clampf(ground_target_chance, 0.0, 1.0),
+		"air_speed_min": maxf(_to_float_or(raw_segment.get("air_speed_min"), 120.0), 10.0),
+		"air_speed_max": maxf(_to_float_or(raw_segment.get("air_speed_max"), 180.0), 10.0),
+		"ground_speed_min": maxf(_to_float_or(raw_segment.get("ground_speed_min"), 90.0), 10.0),
+		"ground_speed_max": maxf(_to_float_or(raw_segment.get("ground_speed_max"), 130.0), 10.0),
+		"fuel_tank_interval": maxf(_to_float_or(raw_segment.get("fuel_tank_interval"), 6.0), 0.0),
+		"fuel_tank_amount": maxf(_to_float_or(raw_segment.get("fuel_tank_amount"), 20.0), 0.0)
+	}
+
+func _to_float_or(value: Variant, fallback: float) -> float:
+	var value_type := typeof(value)
+	if value_type == TYPE_FLOAT or value_type == TYPE_INT:
+		return float(value)
+	return fallback
