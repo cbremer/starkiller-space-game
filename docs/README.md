@@ -5,6 +5,7 @@ All project documentation lives under `docs/`.
 ## Projects
 
 - `project-starkiller-prototype/` - Current Godot prototype docs.
+- `art-direction/` - Art direction inspiration board, concept asset manifest, and worktree plan.
 
 ## Naming Convention
 
