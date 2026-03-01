@@ -70,15 +70,15 @@ func _palette_for_segment(index: int) -> Dictionary:
 			"mid_hill": Color(0.16, 0.13, 0.22)
 		}
 	]
-	var palette := palettes[min(index, palettes.size() - 1)]
+	var palette: Dictionary = palettes[min(index, palettes.size() - 1)]
 	if _palette_override.is_empty():
 		return palette
 	return _merge_palette(palette, _palette_override)
 
 func _merge_palette(base: Dictionary, override: Dictionary) -> Dictionary:
-	var merged := base.duplicate(true)
+	var merged: Dictionary = base.duplicate(true)
 	for key in ["sky", "haze", "cloud", "far_hill", "mid_hill"]:
-		var value := override.get(key)
+		var value: Variant = override.get(key)
 		if typeof(value) == TYPE_COLOR:
 			merged[key] = value
 	return merged

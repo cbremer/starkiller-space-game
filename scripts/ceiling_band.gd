@@ -79,23 +79,23 @@ func _profile_for_segment(index: int) -> Dictionary:
 			"line": Color(0.31, 0.24, 0.40)
 		}
 	]
-	var profile := profiles[min(index, profiles.size() - 1)]
+	var profile: Dictionary = profiles[min(index, profiles.size() - 1)]
 	if _profile_override.is_empty():
 		return profile
 	return _merge_profile(profile, _profile_override)
 
 func _merge_profile(base: Dictionary, override: Dictionary) -> Dictionary:
-	var merged := base.duplicate(true)
-	var base_value := override.get("base")
+	var merged: Dictionary = base.duplicate(true)
+	var base_value: Variant = override.get("base")
 	if typeof(base_value) == TYPE_FLOAT or typeof(base_value) == TYPE_INT:
 		merged["base"] = clampf(float(base_value), BASE_MIN, BASE_MAX)
-	var amp_value := override.get("amp")
+	var amp_value: Variant = override.get("amp")
 	if typeof(amp_value) == TYPE_FLOAT or typeof(amp_value) == TYPE_INT:
 		merged["amp"] = clampf(float(amp_value), AMP_MIN, AMP_MAX)
-	var fill_value := override.get("fill")
+	var fill_value: Variant = override.get("fill")
 	if typeof(fill_value) == TYPE_COLOR:
 		merged["fill"] = fill_value
-	var line_value := override.get("line")
+	var line_value: Variant = override.get("line")
 	if typeof(line_value) == TYPE_COLOR:
 		merged["line"] = line_value
 	return merged
