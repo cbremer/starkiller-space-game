@@ -61,6 +61,15 @@ Run automated Session 5 smoke checks:
 
 `mkdir -p /tmp/starkiller-smoke && /Applications/Godot.app/Contents/MacOS/Godot --headless --path /Users/chrisbremer/code/starkiller-space-game --user-data-dir /tmp/starkiller-smoke --log-file /tmp/starkiller-smoke/godot.log --script res://scripts/smoke_test.gd`
 
+## Importing Images
+
+1. Add `png` or `svg` files under `assets/` (or any project folder).
+2. Open the project in Godot; the editor auto-imports new files.
+3. Select the image in the FileSystem dock to view Import settings.
+4. Adjust settings if needed, then click `Reimport`.
+
+Defaults for new textures are set in `project.godot` under `[importer_defaults]`. Existing images need a manual `Reimport` to pick up changes.
+
 ## Notes
 
 - Core visuals are still placeholder-driven, but Session 6 added baseline sprite/VFX/SFX readability improvements.
