@@ -95,6 +95,12 @@ func _normalize_segment(raw_segment: Dictionary) -> Dictionary:
 	var sky_palette := _normalize_sky_palette(raw_segment.get("sky_palette"))
 	if not sky_palette.is_empty():
 		normalized["sky_palette"] = sky_palette
+	var background_style := _normalize_background_style(raw_segment.get("background_style"))
+	if not background_style.is_empty():
+		normalized["background_style"] = background_style
+	var enemy_style := _normalize_enemy_style(raw_segment.get("enemy_style"))
+	if not enemy_style.is_empty():
+		normalized["enemy_style"] = enemy_style
 	return normalized
 
 func _normalize_terrain_profile(raw_profile: Variant) -> Dictionary:
@@ -114,6 +120,10 @@ func _normalize_profile(raw_profile: Variant, base_min: float, base_max: float) 
 	var amp_value: Variant = profile.get("amp")
 	if typeof(amp_value) == TYPE_FLOAT or typeof(amp_value) == TYPE_INT:
 		normalized["amp"] = clampf(float(amp_value), PROFILE_AMP_MIN, PROFILE_AMP_MAX)
+	for key in ["freq_a", "freq_b", "freq_c", "weight_b", "weight_c", "jagged", "step"]:
+		var value: Variant = profile.get(key)
+		if typeof(value) == TYPE_FLOAT or typeof(value) == TYPE_INT:
+			normalized[key] = float(value)
 	var fill_value: Variant = profile.get("fill")
 	if typeof(fill_value) == TYPE_COLOR:
 		normalized["fill"] = fill_value
@@ -131,6 +141,39 @@ func _normalize_sky_palette(raw_palette: Variant) -> Dictionary:
 		var value: Variant = palette.get(key)
 		if typeof(value) == TYPE_COLOR:
 			normalized[key] = value
+	return normalized
+
+func _normalize_background_style(raw_style: Variant) -> Dictionary:
+	if typeof(raw_style) != TYPE_DICTIONARY:
+		return {}
+	var style: Dictionary = raw_style
+	var normalized: Dictionary = {}
+	var mode_value: Variant = style.get("mode")
+	if typeof(mode_value) == TYPE_STRING:
+		normalized["mode"] = String(mode_value)
+	for key in ["planet_scale", "star_density", "cloud_density", "stripe_density"]:
+		var value: Variant = style.get(key)
+		if typeof(value) == TYPE_FLOAT or typeof(value) == TYPE_INT:
+			normalized[key] = float(value)
+	for key in ["planet_a", "planet_b", "accent_a", "accent_b"]:
+		var color_value: Variant = style.get(key)
+		if typeof(color_value) == TYPE_COLOR:
+			normalized[key] = color_value
+	return normalized
+
+func _normalize_enemy_style(raw_style: Variant) -> Dictionary:
+	if typeof(raw_style) != TYPE_DICTIONARY:
+		return {}
+	var style: Dictionary = raw_style
+	var normalized: Dictionary = {}
+	for key in ["air_variant", "ground_variant"]:
+		var value: Variant = style.get(key)
+		if typeof(value) == TYPE_STRING:
+			normalized[key] = String(value)
+	for key in ["distant_flyby_chance", "distant_scale_min", "distant_scale_max"]:
+		var n: Variant = style.get(key)
+		if typeof(n) == TYPE_FLOAT or typeof(n) == TYPE_INT:
+			normalized[key] = float(n)
 	return normalized
 
 func _to_float_or(value: Variant, fallback: float) -> float:

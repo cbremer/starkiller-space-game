@@ -30,10 +30,18 @@ func ground_height_at_screen_x(screen_x: float) -> float:
 	var world_x := screen_x + _scroll_distance
 	var base := size.y * float(profile["base"])
 	var amp := float(profile["amp"])
+	var freq_a := float(profile.get("freq_a", 0.0105))
+	var freq_b := float(profile.get("freq_b", 0.027))
+	var freq_c := float(profile.get("freq_c", 0.0041))
+	var weight_b := float(profile.get("weight_b", 0.42))
+	var weight_c := float(profile.get("weight_c", 0.58))
+	var jagged := float(profile.get("jagged", 0.0))
 	var y := base
-	y += sin(world_x * 0.0105) * amp
-	y += sin(world_x * 0.027) * amp * 0.42
-	y += cos(world_x * 0.0041) * amp * 0.58
+	y += sin(world_x * freq_a) * amp
+	y += sin(world_x * freq_b) * amp * weight_b
+	y += cos(world_x * freq_c) * amp * weight_c
+	if jagged > 0.0:
+		y += (snapped(sin(world_x * 0.11), 0.2) * amp * 0.35 * jagged)
 	return clampf(y, size.y * 0.55, size.y - 34.0)
 
 func _draw() -> void:
@@ -45,7 +53,7 @@ func _draw() -> void:
 	var ridge := PackedVector2Array()
 
 	points.push_back(Vector2(0, size.y))
-	var step := 24.0
+	var step := maxf(8.0, float(profile.get("step", 20.0)))
 	var x := 0.0
 	while x <= size.x + step:
 		var y := ground_height_at_screen_x(x)
@@ -57,6 +65,17 @@ func _draw() -> void:
 
 	draw_colored_polygon(points, fill_color)
 	draw_polyline(ridge, line_color, 2.5)
+	_draw_detail_stripes(size, profile, ridge)
+
+func _draw_detail_stripes(size: Vector2, profile: Dictionary, ridge: PackedVector2Array) -> void:
+	if ridge.size() < 2:
+		return
+	var stripe_color := Color(profile["line"]).lerp(Color.WHITE, 0.12)
+	stripe_color.a = 0.22
+	for i in range(0, ridge.size(), 2):
+		var p := ridge[i]
+		var stripe_depth := 22.0 + sin((p.x + _scroll_distance) * 0.08) * 6.0
+		draw_line(p + Vector2(0, 1), Vector2(p.x, minf(size.y, p.y + stripe_depth)), stripe_color, 1.0)
 
 func _profile_for_segment(index: int) -> Dictionary:
 	var profiles := [
@@ -92,6 +111,10 @@ func _merge_profile(base: Dictionary, override: Dictionary) -> Dictionary:
 	var amp_value: Variant = override.get("amp")
 	if typeof(amp_value) == TYPE_FLOAT or typeof(amp_value) == TYPE_INT:
 		merged["amp"] = clampf(float(amp_value), AMP_MIN, AMP_MAX)
+	for key in ["freq_a", "freq_b", "freq_c", "weight_b", "weight_c", "jagged", "step"]:
+		var key_value: Variant = override.get(key)
+		if typeof(key_value) == TYPE_FLOAT or typeof(key_value) == TYPE_INT:
+			merged[key] = float(key_value)
 	var fill_value: Variant = override.get("fill")
 	if typeof(fill_value) == TYPE_COLOR:
 		merged["fill"] = fill_value
