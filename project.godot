@@ -21,8 +21,8 @@ config/icon="res://assets/placeholders/icon.svg"
 
 [display]
 
-window/size/viewport_width=1280
-window/size/viewport_height=720
+window/size/viewport_width=1920
+window/size/viewport_height=1080
 window/size/window_width_override=1920
 window/size/window_height_override=1080
 window/size/mode=0
@@ -75,4 +75,16 @@ refuel={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":82,"physical_keycode":82,"key_label":82,"unicode":114,"location":0,"echo":false,"script":null)
 ]
+}
+
+[importer_defaults]
+
+texture={
+"compress/mode": 0,
+"mipmaps/generate": false,
+"flags/filter": true,
+"flags/mipmaps": false,
+"flags/repeat": 0,
+"process/fix_alpha_border": true,
+"process/premult_alpha": false
 }

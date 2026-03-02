@@ -24,6 +24,8 @@ static func stream_for(cue_name: String) -> AudioStreamWAV:
 			stream = _build_double_tone(430.0, 670.0, 0.14, 0.4)
 		"death":
 			stream = _build_sweep(250.0, 70.0, 0.42, 0.66, 0.22)
+		"stage_clear":
+			stream = _build_double_tone(520.0, 860.0, 0.22, 0.45)
 		_:
 			return null
 

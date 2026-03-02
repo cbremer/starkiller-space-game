@@ -44,6 +44,19 @@ text = "Controls"
 autowrap_mode = 2
 theme_override_font_sizes/font_size = 19
 
+[node name="StageBanner" type="Label" parent="CanvasLayer"]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.32
+anchor_right = 0.5
+anchor_bottom = 0.32
+offset_left = -360.0
+offset_top = -36.0
+offset_right = 360.0
+offset_bottom = 36.0
+text = "STAGE CLEAR"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 56
 [node name="PauseMenu" type="PanelContainer" parent="CanvasLayer"]
 visible = false
 anchor_left = 0.5
