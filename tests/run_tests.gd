@@ -21,6 +21,7 @@ func _run_all() -> void:
 	_run_test("fuel clamped to max", _test_fuel_clamped)
 	_run_test("stage segment settings fallback to defaults", _test_stage_segment_settings_fallback_to_defaults)
 	_run_test("stage segment settings normalize bad values", _test_stage_segment_settings_normalize_bad_values)
+	_run_test("stage segment settings normalize palette overrides", _test_stage_segment_settings_normalize_palette_overrides)
 	_run_test("scenario: full lifecycle to game over", _scenario_full_lifecycle_to_game_over)
 	_run_test("scenario: pause freezes fuel drain and then resumes", _scenario_pause_freeze_and_resume)
 
@@ -134,6 +135,43 @@ func _test_stage_segment_settings_normalize_bad_values() -> void:
 	_expect_true(float(segment["ground_speed_max"]) >= 10.0, "ground speed maximum should be sanitized")
 	_expect_eq(float(segment["fuel_tank_interval"]), 0.0, "fuel tank interval should clamp to zero minimum")
 	_expect_eq(float(segment["fuel_tank_amount"]), 0.0, "fuel amount should clamp to zero minimum")
+
+func _test_stage_segment_settings_normalize_palette_overrides() -> void:
+	var settings = StageSegmentSettingsScript.new()
+	var custom_segments: Array[Dictionary] = [{
+		"segment_name": "Palette Segment",
+		"terrain_profile": {
+			"base": 0.4,
+			"amp": "bad",
+			"fill": "nope",
+			"line": Color(0.5, 0.6, 0.7)
+		},
+		"ceiling_profile": {
+			"base": 0.5,
+			"amp": 2000.0,
+			"fill": Color(0.2, 0.2, 0.2)
+		},
+		"sky_palette": {
+			"sky": Color(0.1, 0.2, 0.3),
+			"cloud": "bad"
+		}
+	}]
+	settings.segments = custom_segments
+	var segments: Array = settings.normalized_segments()
+	_expect_eq(segments.size(), 1, "palette normalization should keep segment")
+	var segment: Dictionary = segments[0]
+	var terrain_profile: Dictionary = segment.get("terrain_profile", {})
+	_expect_true(terrain_profile.has("base"), "terrain profile base should be preserved")
+	_expect_true(float(terrain_profile.get("base", 0.0)) >= 0.62, "terrain base should clamp to minimum")
+	_expect_true(not terrain_profile.has("amp"), "invalid terrain amp should be ignored")
+	_expect_true(not terrain_profile.has("fill"), "invalid terrain fill should be ignored")
+	_expect_true(terrain_profile.has("line"), "valid terrain line should be kept")
+	var ceiling_profile: Dictionary = segment.get("ceiling_profile", {})
+	_expect_true(float(ceiling_profile.get("base", 1.0)) <= 0.35, "ceiling base should clamp to maximum")
+	_expect_true(float(ceiling_profile.get("amp", 0.0)) <= 120.0, "ceiling amp should clamp to maximum")
+	var sky_palette: Dictionary = segment.get("sky_palette", {})
+	_expect_true(sky_palette.has("sky"), "sky palette should keep valid sky color")
+	_expect_true(not sky_palette.has("cloud"), "invalid sky palette color should be ignored")
 
 func _scenario_full_lifecycle_to_game_over() -> void:
 	var state = GameStateScript.new()

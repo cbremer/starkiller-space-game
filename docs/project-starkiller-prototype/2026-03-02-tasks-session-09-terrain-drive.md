@@ -36,8 +36,8 @@ Drive terrain/geometry polish and document the manual validation findings that S
 
 ## Execution Checklist (Live)
 
-Last updated: 2026-03-02
-Branch: `codex/session9-terrain-drive`
+Last updated: 2026-03-01
+Branch: `codex/session9-terrain-redux`
 
 - [ ] Human playtest progression pacing and difficulty spikes.
 - [ ] Human validate pause/menu/remap usability and preference decisions.

@@ -2,6 +2,12 @@ extends Node2D
 
 var _scroll_distance := 0.0
 var _segment_index := 0
+var _profile_override: Dictionary = {}
+
+const BASE_MIN := 0.05
+const BASE_MAX := 0.40
+const AMP_MIN := 4.0
+const AMP_MAX := 120.0
 
 func set_scroll_distance(distance: float) -> void:
 	_scroll_distance = distance
@@ -9,6 +15,13 @@ func set_scroll_distance(distance: float) -> void:
 
 func set_segment_index(index: int) -> void:
 	_segment_index = max(index, 0)
+	queue_redraw()
+
+func set_profile_override(profile: Dictionary) -> void:
+	if typeof(profile) == TYPE_DICTIONARY:
+		_profile_override = profile
+	else:
+		_profile_override = {}
 	queue_redraw()
 
 func ceiling_height_at_screen_x(screen_x: float) -> float:
@@ -66,4 +79,23 @@ func _profile_for_segment(index: int) -> Dictionary:
 			"line": Color(0.31, 0.24, 0.40)
 		}
 	]
-	return profiles[min(index, profiles.size() - 1)]
+	var profile: Dictionary = profiles[min(index, profiles.size() - 1)]
+	if _profile_override.is_empty():
+		return profile
+	return _merge_profile(profile, _profile_override)
+
+func _merge_profile(base: Dictionary, override: Dictionary) -> Dictionary:
+	var merged: Dictionary = base.duplicate(true)
+	var base_value: Variant = override.get("base")
+	if typeof(base_value) == TYPE_FLOAT or typeof(base_value) == TYPE_INT:
+		merged["base"] = clampf(float(base_value), BASE_MIN, BASE_MAX)
+	var amp_value: Variant = override.get("amp")
+	if typeof(amp_value) == TYPE_FLOAT or typeof(amp_value) == TYPE_INT:
+		merged["amp"] = clampf(float(amp_value), AMP_MIN, AMP_MAX)
+	var fill_value: Variant = override.get("fill")
+	if typeof(fill_value) == TYPE_COLOR:
+		merged["fill"] = fill_value
+	var line_value: Variant = override.get("line")
+	if typeof(line_value) == TYPE_COLOR:
+		merged["line"] = line_value
+	return merged

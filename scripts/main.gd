@@ -1,6 +1,6 @@
 extends Node2D
 
-const FUEL_DRAIN_PER_SECOND := 5.0
+const FUEL_DRAIN_PER_SECOND := 0.05
 const REFUEL_PER_SECOND := 32.0
 const REFUEL_RECT := Rect2(Vector2(15, 170), Vector2(130, 260))
 const BOLT_SPAWN_OFFSET := Vector2(22, 0)
@@ -96,6 +96,7 @@ var remap_status_text := "Use Up/Down to pick an action, Enter to rebind."
 var _suppress_pause_this_frame := false
 var screen_shake_strength := 0.0
 var screen_shake_remaining := 0.0
+var _last_visual_segment_index := -1
 
 func _ready() -> void:
 	rng.randomize()
@@ -560,6 +561,21 @@ func _update_world_layers() -> void:
 	if terrain_layer != null:
 		terrain_layer.call("set_scroll_distance", run_distance)
 		terrain_layer.call("set_segment_index", current_segment_index)
+	if current_segment_index != _last_visual_segment_index:
+		_apply_segment_visuals()
+		_last_visual_segment_index = current_segment_index
+
+func _apply_segment_visuals() -> void:
+	var segment = _current_segment()
+	var terrain_profile: Dictionary = segment.get("terrain_profile", {})
+	var ceiling_profile: Dictionary = segment.get("ceiling_profile", {})
+	var sky_palette: Dictionary = segment.get("sky_palette", {})
+	if background_layer != null and background_layer.has_method("set_palette_override"):
+		background_layer.call("set_palette_override", sky_palette)
+	if ceiling_layer != null and ceiling_layer.has_method("set_profile_override"):
+		ceiling_layer.call("set_profile_override", ceiling_profile)
+	if terrain_layer != null and terrain_layer.has_method("set_profile_override"):
+		terrain_layer.call("set_profile_override", terrain_profile)
 
 func _ceiling_height_at(screen_x: float) -> float:
 	if ceiling_layer != null and ceiling_layer.has_method("ceiling_height_at_screen_x"):
@@ -586,6 +602,7 @@ func _load_stage_segments() -> void:
 
 func _reset_run_progression() -> void:
 	current_segment_index = 0
+	_last_visual_segment_index = -1
 	run_distance = 0.0
 	var segment = _current_segment()
 	segment_distance_remaining = float(segment["length_px"])
