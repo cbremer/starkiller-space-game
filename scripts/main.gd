@@ -17,6 +17,7 @@ const PLAYER_TERRAIN_CLEARANCE := 12.0
 const PLAYER_CEILING_CLEARANCE := 10.0
 const TUNNEL_SPAWN_MARGIN := 40.0
 const STAGE_TRANSITION_DURATION := 1.6
+const STAGE_CLEAR_BONUS := 500
 const GAME_STATE_SCRIPT := preload("res://scripts/game_state.gd")
 const LASER_BOLT_SCRIPT := preload("res://scripts/laser_bolt.gd")
 const BOMB_PAYLOAD_SCRIPT := preload("res://scripts/bomb_payload.gd")
@@ -77,6 +78,7 @@ const INPUT_BINDINGS_SECTION := "input_bindings"
 @onready var remap_panel: PanelContainer = $CanvasLayer/RemapPanel
 @onready var remap_status_label: Label = $CanvasLayer/RemapPanel/VBox/RemapStatus
 @onready var remap_list_label: Label = $CanvasLayer/RemapPanel/VBox/RemapList
+@onready var stage_banner: Label = $CanvasLayer/StageBanner
 
 var game_state = GAME_STATE_SCRIPT.new()
 var last_action_text := "No actions yet"
@@ -639,16 +641,40 @@ func _advance_segment() -> void:
 	fuel_tank_spawn_remaining = minf(fuel_tank_spawn_remaining, float(segment["fuel_tank_interval"]))
 	game_state.set_stage(current_segment_index + 1)
 	stage_transition_remaining = STAGE_TRANSITION_DURATION
+	game_state.add_score(STAGE_CLEAR_BONUS)
 	last_action_text = "Stage Clear - entering %s" % String(segment["segment_name"])
 	action_label.text = "Last Action: %s" % last_action_text
+	_set_stage_banner_text("STAGE CLEAR")
+	_set_stage_banner_visible(true)
+	_play_sfx("stage_clear", -6.0, 0.03)
 
 func _update_stage_transition(delta: float) -> void:
 	stage_transition_remaining = maxf(0.0, stage_transition_remaining - delta)
 	run_distance += STAGE_SCROLL_SPEED * delta
+	var progress := 1.0 - (stage_transition_remaining / STAGE_TRANSITION_DURATION)
+	_update_stage_banner(progress)
 	if stage_transition_remaining <= 0.0:
+		_set_stage_banner_visible(false)
 		var segment = _current_segment()
 		last_action_text = "Entered %s" % String(segment["segment_name"])
 		action_label.text = "Last Action: %s" % last_action_text
+
+func _update_stage_banner(progress: float) -> void:
+	if stage_banner == null:
+		return
+	var phase_text := "STAGE CLEAR" if progress < 0.5 else "ENTERING %s" % String(_current_segment()["segment_name"])
+	stage_banner.text = phase_text
+	var pulse := 0.55 + 0.45 * sin(progress * PI)
+	stage_banner.modulate = Color(1, 1, 1, clampf(pulse, 0.0, 1.0))
+	stage_banner.scale = Vector2.ONE * (1.0 + 0.08 * sin(progress * TAU))
+
+func _set_stage_banner_text(text: String) -> void:
+	if stage_banner != null:
+		stage_banner.text = text
+
+func _set_stage_banner_visible(visible: bool) -> void:
+	if stage_banner != null:
+		stage_banner.visible = visible
 
 func _on_respawned() -> void:
 	player.position = Vector2(120, 320)

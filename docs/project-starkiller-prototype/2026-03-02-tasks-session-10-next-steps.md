@@ -16,7 +16,8 @@ Convert the latest playtest findings into a stable, more complete gameplay loop 
 
 2. `AI Agent` - Gameplay loop polish
 - Review and adjust progression pacing so segment transitions feel distinct.
-- Add clear stage transition cycles (end-of-stage messaging + brief transition pause).
+- Add clear stage transition cycles (end-of-stage messaging + brief transition pause + reward).
+- Increase visual contrast between stages so each segment feels distinct.
 - Identify and resolve any remaining "sharp edges" (UI, pause, or respawn oddities).
 
 3. `AI Agent` - Documentation alignment
