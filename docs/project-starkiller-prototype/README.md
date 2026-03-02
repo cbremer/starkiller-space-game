@@ -4,7 +4,7 @@ This folder is the canonical documentation for the current Starkiller Space Game
 
 ## Current Status
 
-Session 8 is now active. Stage segment configuration has started moving from hardcoded script data into resources, and deferred manual validation is queued for kickoff playtesting.
+Session 8 is now closed. Stage segment resource work is finished, and Session 9 now drives the manual validation kickoff plus terrain polish.
 
 ## Timeline
 
@@ -17,7 +17,8 @@ Session 8 is now active. Stage segment configuration has started moving from har
 | 2026-02-28 | Tasks | `2026-02-28-tasks-session-06-upscale-fidelity.md` | Session 6 baseline upscale/fidelity execution record |
 | 2026-03-01 | Brainstorm | `2026-03-01-brainstorm-high-fidelity-visual-exploration.md` | Inspiration archive + concept asset lab setup |
 | 2026-03-01 | Tasks | `2026-03-01-tasks-session-07-regression-hardening.md` | Session 7 closeout tracker (manual validation deferred to Session 8 kickoff) |
-| 2026-03-01 | Tasks | `2026-03-01-tasks-session-08-stage-data-and-validation-kickoff.md` | Active Session 8 tracker (stage-data externalization + validation kickoff) |
+| 2026-03-01 | Tasks | `2026-03-01-tasks-session-08-stage-data-and-validation-kickoff.md` | Session 8 closeout tracker (stage data wrapped; manual validation now tracked in Session 9) |
+| 2026-03-02 | Tasks | `2026-03-02-tasks-session-09-terrain-drive.md` | Active Session 9 tracker (manual validation + terrain polish) |
 
 ## Naming Convention
 

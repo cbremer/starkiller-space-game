@@ -3,6 +3,10 @@
 Date: 2026-03-01
 Source: Session 7 closeout handoff + Session 8 planning goals.
 
+## Status
+
+- Stage data externalization is in place; deferred manual validation is now being tracked by Session 9 tasks.
+
 ## Goal
 
 Start Session 8 by externalizing stage segment data from gameplay code and kicking off deferred manual validation work.
@@ -45,8 +49,8 @@ Branch: `codex/session8-stage-data`
 - [x] Externalize stage segment definitions to `assets/data/stage_segments.tres`.
 - [x] Load stage segments from resource with safe fallback defaults.
 - [x] Add automated tests for segment settings fallback/normalization.
-- [ ] Human playtest progression pacing and difficulty spikes.
-- [ ] Human validate pause/menu/remap usability and preference decisions.
-- [ ] Human run focused bug bash and prioritize top issues.
-- [ ] Apply top-priority fixes from Session 8 manual validation.
-- [ ] Update spec + READMEs + timeline with validation outcomes.
+- [x] Human playtest progression pacing and difficulty spikes. (Moved to Session 9 tracker.)
+- [x] Human validate pause/menu/remap usability and preference decisions. (Moved to Session 9 tracker.)
+- [x] Human run focused bug bash and prioritize top issues. (Moved to Session 9 tracker.)
+- [x] Apply top-priority fixes from Session 8 manual validation. (Covered by new Session 9 planning.)
+- [x] Update spec + READMEs + timeline with validation outcomes. (Done; tracking continues in Session 9 doc.)

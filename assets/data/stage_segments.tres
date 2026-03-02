@@ -5,39 +5,39 @@
 [resource]
 script = ExtResource("1_qxj4r")
 segments = [{
-"air_speed_max": 185.0,
-"air_speed_min": 120.0,
+"segment_name": "Sector 1: Open Sky",
+"length_px": 2400.0,
 "enemy_spawn_interval": 1.15,
 "enemy_spawn_variance": 0.2,
-"fuel_tank_amount": 24.0,
-"fuel_tank_interval": 7.0,
-"ground_speed_max": 125.0,
-"ground_speed_min": 90.0,
 "ground_target_chance": 0.3,
-"length_px": 2400.0,
-"segment_name": "Sector 1: Open Sky"
+"air_speed_min": 120.0,
+"air_speed_max": 185.0,
+"ground_speed_min": 90.0,
+"ground_speed_max": 125.0,
+"fuel_tank_interval": 7.0,
+"fuel_tank_amount": 24.0
 }, {
-"air_speed_max": 205.0,
-"air_speed_min": 135.0,
+"segment_name": "Sector 2: Canyon",
+"length_px": 2600.0,
 "enemy_spawn_interval": 0.95,
 "enemy_spawn_variance": 0.22,
-"fuel_tank_amount": 22.0,
-"fuel_tank_interval": 5.5,
-"ground_speed_max": 140.0,
-"ground_speed_min": 100.0,
 "ground_target_chance": 0.45,
-"length_px": 2600.0,
-"segment_name": "Sector 2: Canyon"
+"air_speed_min": 135.0,
+"air_speed_max": 205.0,
+"ground_speed_min": 100.0,
+"ground_speed_max": 140.0,
+"fuel_tank_interval": 5.5,
+"fuel_tank_amount": 22.0
 }, {
-"air_speed_max": 220.0,
-"air_speed_min": 150.0,
+"segment_name": "Sector 3: Fortress Run",
+"length_px": 3000.0,
 "enemy_spawn_interval": 0.82,
 "enemy_spawn_variance": 0.18,
-"fuel_tank_amount": 20.0,
-"fuel_tank_interval": 4.8,
-"ground_speed_max": 150.0,
-"ground_speed_min": 110.0,
 "ground_target_chance": 0.55,
-"length_px": 3000.0,
-"segment_name": "Sector 3: Fortress Run"
+"air_speed_min": 150.0,
+"air_speed_max": 220.0,
+"ground_speed_min": 110.0,
+"ground_speed_max": 150.0,
+"fuel_tank_interval": 4.8,
+"fuel_tank_amount": 20.0
 }]
