@@ -12,6 +12,8 @@ This file captures the visual references provided in chat so we can keep a stabl
 | REF-04 | Cubic terrace + lake + sunset scene | Geometric hard-surface landscaping mixed with natural forms, atmospheric haze | Architectural set-dressing and puzzle arena mood |
 | REF-05 | Lunar outpost with magenta lighting | Strong sci-fi structures, saturated purple-pink terrain, cold space backdrop | Faction outpost kit and environment tone for off-world maps |
 
+| REF-06 | John Berkey aerospace concept language | Monumental ship silhouettes, atmospheric haze, asymmetric hull massing, luminous edge highlights | Long-range background traffic (binders/cutters), enemy silhouette language, and stage transition keyframes |
+
 ## Art-direction pillars (v0)
 
 1. **Retro-futurist color scripting**
@@ -26,6 +28,9 @@ This file captures the visual references provided in chat so we can keep a stabl
 4. **Scale-first composition**
    - Prefer gigantic structures, broad horizons, and oversized celestial bodies.
    - Anchor each scene with one readable focal landmark.
+5. **Berkey-inspired aerospace drama**
+   - Use heavy, asymmetrical ship massing with bright engine accents and distant convoy traffic.
+   - Blend painterly fog gradients with razor-sharp silhouette cutouts for hostile craft readability.
 
 ## Immediate experimentation goals
 

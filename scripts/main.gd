@@ -101,6 +101,7 @@ var screen_shake_strength := 0.0
 var screen_shake_remaining := 0.0
 var _last_visual_segment_index := -1
 var stage_transition_remaining := 0.0
+var current_enemy_style: Dictionary = {}
 
 func _ready() -> void:
 	rng.randomize()
@@ -327,6 +328,7 @@ func _spawn_bolt() -> void:
 
 func _spawn_enemy() -> void:
 	var segment = _current_segment()
+	var style: Dictionary = segment.get("enemy_style", {})
 	var spawn_x := _spawn_x()
 	var enemy := ENEMY_TARGET_SCRIPT.new()
 	var spawn_ground := rng.randf() <= float(segment["ground_target_chance"])
@@ -335,6 +337,7 @@ func _spawn_enemy() -> void:
 		enemy.position = Vector2(spawn_x, ground_spawn_y)
 		enemy.set("speed", rng.randf_range(float(segment["ground_speed_min"]), float(segment["ground_speed_max"])))
 		enemy.set("target_type", "ground")
+		enemy.set("ground_variant", String(style.get("ground_variant", "walker")))
 	else:
 		var tunnel_top := _ceiling_height_at(spawn_x) + TUNNEL_SPAWN_MARGIN
 		var tunnel_bottom := _terrain_height_at(spawn_x) - TUNNEL_SPAWN_MARGIN
@@ -345,6 +348,10 @@ func _spawn_enemy() -> void:
 		enemy.position = Vector2(spawn_x, rng.randf_range(air_min, air_max))
 		enemy.set("speed", rng.randf_range(float(segment["air_speed_min"]), float(segment["air_speed_max"])))
 		enemy.set("target_type", "air")
+		enemy.set("air_variant", String(style.get("air_variant", "raider")))
+		var distant_chance := clampf(float(style.get("distant_flyby_chance", 0.0)), 0.0, 0.95)
+		if rng.randf() < distant_chance:
+			enemy.set("is_distant", true)
 	add_child(enemy)
 
 func _update_enemy_spawns(delta: float) -> void:
@@ -578,8 +585,12 @@ func _apply_segment_visuals() -> void:
 	var terrain_profile: Dictionary = segment.get("terrain_profile", {})
 	var ceiling_profile: Dictionary = segment.get("ceiling_profile", {})
 	var sky_palette: Dictionary = segment.get("sky_palette", {})
+	var background_style: Dictionary = segment.get("background_style", {})
+	current_enemy_style = segment.get("enemy_style", {})
 	if background_layer != null and background_layer.has_method("set_palette_override"):
 		background_layer.call("set_palette_override", sky_palette)
+	if background_layer != null and background_layer.has_method("set_style_override"):
+		background_layer.call("set_style_override", background_style)
 	if ceiling_layer != null and ceiling_layer.has_method("set_profile_override"):
 		ceiling_layer.call("set_profile_override", ceiling_profile)
 	if terrain_layer != null and terrain_layer.has_method("set_profile_override"):
