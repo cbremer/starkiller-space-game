@@ -21,6 +21,7 @@ func _draw() -> void:
 	var t := clampf(_age / lifetime, 0.0, 1.0)
 	var radius := lerpf(8.0, max_radius, t)
 	var alpha := 1.0 - t
+	draw_circle(Vector2.ZERO, radius * 0.72, Color(1.0, 0.86, 0.42, alpha * 0.18))
 	draw_arc(
 		Vector2.ZERO,
 		radius,

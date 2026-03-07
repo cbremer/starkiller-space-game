@@ -8,6 +8,7 @@ Current prototype is a keyboard-first, Scramble-style horizontal shooter slice w
 2. Press Play (`F5`) to run `scenes/Main.tscn`.
 3. Press `Enter` to start a run.
 4. Default presentation uses a 1280x720 gameplay viewport upscaled to a 1920x1080 window and starts in windowed mode (`F11` toggles fullscreen).
+5. From the startup `MENU`, you can change window mode or remap controls before starting the run.
 
 ## Automated Tests
 
@@ -23,6 +24,14 @@ Current coverage includes both unit checks and scenario flows for `GameState`:
 - full lifecycle through game over
 - pause freeze and resume behavior
 
+## Gameplay Names
+
+- Hero ship: `Starkiller`
+- Enemy ships: `Raider`, `Cutter`, `Binder`, `Interceptor`
+- Ground units: `Walker`, `Crawler`, `Turret` (the trench cannon unit)
+- Weapons: `Laser Bolt`, `Bomb Payload`, `Bomb Blast`
+- Pickup: `Fuel Tank`
+
 ## Controls (default)
 
 - Move: Arrow keys
@@ -37,11 +46,15 @@ Current coverage includes both unit checks and scenario flows for `GameState`:
 ## Current Features
 
 - Core run-state flow (`GameState`): start, pause, death, respawn.
+- Agreed gameplay roster:
+  - hero ship: `Starkiller`
+  - air enemies: `Raider`, `Cutter`, `Binder`, `Interceptor`
+  - ground enemies: `Walker`, `Crawler`, `Turret` (trench cannon)
 - Pause menu with instant retry and quick QoL shortcuts.
 - Horizontal flight feel with ship facing right.
 - Distinct weapon behavior:
-  - Laser shots travel right and destroy air targets.
-  - Bombs are gravity-dropped payloads and destroy ground targets.
+  - `Laser Bolt` shots travel right and destroy air targets.
+  - `Bomb Payload` drops are gravity-based and destroy ground targets.
 - Enemy pressure loop with randomized spawn pacing/speeds.
 - Fuel system:
   - passive fuel drain,
@@ -52,7 +65,8 @@ Current coverage includes both unit checks and scenario flows for `GameState`:
   - segment-specific spawn parameters loaded from resource data (`assets/data/stage_segments.tres`),
   - HUD stage/segment visibility.
 - Prototype input remapping panel for core actions (`move_*`, `fire`, `bomb`, `start`, `pause`) with local persistence.
-- Bombs can damage both ground and air enemies (direct hit and blast radius on terrain impact).
+- Startup menu includes pre-run control remapping and display mode access.
+- `Bomb Payload` drops can damage both ground and air enemies (direct hit and `Bomb Blast` radius on terrain impact).
 Press `Esc` to open the pause menu—resume, retry, toggle window mode, or open the remap panel; this is the editable menu you can modify while playing.
 
 ## Smoke Test

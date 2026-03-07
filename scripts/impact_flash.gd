@@ -27,5 +27,8 @@ func _draw() -> void:
 	fill.a *= alpha
 	var ring := ring_color
 	ring.a *= alpha
+	var halo := fill
+	halo.a *= 0.45
+	draw_circle(Vector2.ZERO, radius * 1.55, halo)
 	draw_circle(Vector2.ZERO, radius, fill)
 	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 36, ring, 2.0)
