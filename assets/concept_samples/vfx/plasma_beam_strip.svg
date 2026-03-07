@@ -6,7 +6,6 @@
       <stop offset="100%" stop-color="#ffaf4f"/>
     </linearGradient>
   </defs>
-  <rect width="1024" height="128" fill="#060b20"/>
   <rect x="35" y="46" width="954" height="36" rx="18" fill="url(#beam)"/>
   <rect x="35" y="54" width="954" height="20" rx="10" fill="#ffffff" opacity="0.42"/>
 </svg>

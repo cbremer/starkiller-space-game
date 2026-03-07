@@ -1,5 +1,8 @@
 extends Node2D
 
+const SPACEPORT_SPIRES_TEXTURE := preload("res://assets/concept_samples/props/spaceport_spires.svg")
+const MONOLITH_GATE_TEXTURE := preload("res://assets/concept_samples/props/monolith_gate.svg")
+
 var _scroll_distance := 0.0
 var _segment_index := 0
 var _palette_override: Dictionary = {}
@@ -43,16 +46,55 @@ func _draw() -> void:
 			_draw_stars(size, style, palette)
 			_draw_moon_surface(size, palette)
 			_draw_planet(size, style, palette)
+			_draw_prop_clusters(size, style, palette)
 		"jupiter":
 			_draw_gas_bands(size, style, palette)
 			_draw_distant_traffic(size, palette)
+			_draw_prop_clusters(size, style, palette)
 		"tunnel":
 			_draw_tunnel_glow(size, palette)
 			_draw_distant_traffic(size, palette)
 		_:
 			_draw_clouds(size, style, palette)
+			_draw_prop_clusters(size, style, palette)
 			_draw_hill_band(size, 0.20, size.y * 0.56, 34.0, palette["far_hill"])
 			_draw_hill_band(size, 0.35, size.y * 0.64, 46.0, palette["mid_hill"])
+
+func _draw_prop_clusters(size: Vector2, style: Dictionary, palette: Dictionary) -> void:
+	var prop_density := clampf(float(style.get("prop_density", 1.0)), 0.35, 2.4)
+	var stride := int(clampf(360.0 / prop_density, 170.0, 520.0))
+	var scroll_parallax := 0.17
+	var tint := Color(palette["cloud"]).lerp(palette["far_hill"], 0.55)
+	tint.a = 0.34
+	var base_y := size.y * 0.69
+	for x in range(-stride, int(size.x) + stride * 2, stride):
+		var cluster_index := int(floor((float(x) + _scroll_distance * scroll_parallax) / float(stride)))
+		var draw_x := float(x) - fmod(_scroll_distance * scroll_parallax, float(stride))
+		var variant_roll: int = abs(cluster_index) % 5
+		var is_city_cluster: bool = variant_roll == 0 or variant_roll == 3
+		var texture: Texture2D = SPACEPORT_SPIRES_TEXTURE if is_city_cluster else MONOLITH_GATE_TEXTURE
+		var width_bias := 1.0 if is_city_cluster else 0.82
+		var scale := 0.18 + float(abs(cluster_index * 17) % 7) * 0.035
+		if is_city_cluster:
+			scale += 0.05
+		var prop_size := texture.get_size() * scale
+		prop_size.x *= width_bias
+		var y_jitter := float((abs(cluster_index * 29) % 28) - 14)
+		var prop_rect := Rect2(
+			Vector2(draw_x - prop_size.x * 0.5, base_y - prop_size.y + y_jitter),
+			prop_size
+		)
+		if prop_rect.position.x > size.x + 80.0 or prop_rect.end.x < -80.0:
+			continue
+		draw_texture_rect(texture, prop_rect, false, tint)
+		if is_city_cluster and scale > 0.28:
+			var annex_scale := scale * 0.58
+			var annex_size := MONOLITH_GATE_TEXTURE.get_size() * annex_scale
+			var annex_rect := Rect2(
+				Vector2(prop_rect.position.x + prop_size.x * 0.52, base_y - annex_size.y + y_jitter + 10.0),
+				annex_size
+			)
+			draw_texture_rect(MONOLITH_GATE_TEXTURE, annex_rect, false, Color(tint.r, tint.g, tint.b, tint.a * 0.82))
 
 func _draw_clouds(size: Vector2, style: Dictionary, palette: Dictionary) -> void:
 	var cloud_speed := 0.22

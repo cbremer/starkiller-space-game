@@ -12,6 +12,7 @@ const PLACEHOLDER_TEXTURES := preload("res://scripts/placeholder_textures.gd")
 @export var ground_variant := "walker"
 @export var is_distant := false
 @export_range(0.35, 2.5, 0.05) var air_sprite_scale := 1.18
+@export_range(0.8, 1.6, 0.05) var air_sprite_height_scale := 1.1
 @export_range(0.35, 2.5, 0.05) var ground_sprite_scale := 1.24
 
 var is_active := true
@@ -54,5 +55,5 @@ func _update_visual() -> void:
 
 	_sprite.texture = PLACEHOLDER_TEXTURES.enemy_air_texture_variant(air_variant)
 	var scale_mult := 0.68 if is_distant else 1.0
-	_sprite.scale = Vector2.ONE * air_sprite_scale * scale_mult
+	_sprite.scale = Vector2(air_sprite_scale, air_sprite_scale * air_sprite_height_scale) * scale_mult
 	_sprite.modulate = Color(0.86, 0.92, 1.0, 0.62) if is_distant else Color.WHITE

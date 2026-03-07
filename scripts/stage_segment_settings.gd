@@ -4,42 +4,42 @@ class_name StageSegmentSettings
 const DEFAULT_SEGMENTS: Array[Dictionary] = [
 	{
 		"segment_name": "Sector 1: Open Sky",
-		"length_px": 2400.0,
-		"enemy_spawn_interval": 1.15,
-		"enemy_spawn_variance": 0.20,
-		"ground_target_chance": 0.30,
+		"length_px": 11400.0,
+		"enemy_spawn_interval": 1.4,
+		"enemy_spawn_variance": 0.35,
+		"ground_target_chance": 0.20,
 		"air_speed_min": 120.0,
 		"air_speed_max": 185.0,
 		"ground_speed_min": 90.0,
 		"ground_speed_max": 125.0,
-		"fuel_tank_interval": 7.0,
-		"fuel_tank_amount": 24.0
+		"fuel_tank_interval": 18.0,
+		"fuel_tank_amount": 28.0
 	},
 	{
 		"segment_name": "Sector 2: Canyon",
-		"length_px": 2600.0,
-		"enemy_spawn_interval": 0.95,
-		"enemy_spawn_variance": 0.22,
-		"ground_target_chance": 0.45,
+		"length_px": 11400.0,
+		"enemy_spawn_interval": 1.2,
+		"enemy_spawn_variance": 0.32,
+		"ground_target_chance": 0.30,
 		"air_speed_min": 135.0,
 		"air_speed_max": 205.0,
 		"ground_speed_min": 100.0,
 		"ground_speed_max": 140.0,
-		"fuel_tank_interval": 5.5,
-		"fuel_tank_amount": 22.0
+		"fuel_tank_interval": 15.0,
+		"fuel_tank_amount": 25.0
 	},
 	{
 		"segment_name": "Sector 3: Fortress Run",
-		"length_px": 3000.0,
-		"enemy_spawn_interval": 0.82,
-		"enemy_spawn_variance": 0.18,
-		"ground_target_chance": 0.55,
+		"length_px": 11400.0,
+		"enemy_spawn_interval": 1.0,
+		"enemy_spawn_variance": 0.26,
+		"ground_target_chance": 0.38,
 		"air_speed_min": 150.0,
 		"air_speed_max": 220.0,
 		"ground_speed_min": 110.0,
 		"ground_speed_max": 150.0,
-		"fuel_tank_interval": 4.8,
-		"fuel_tank_amount": 20.0
+		"fuel_tank_interval": 13.0,
+		"fuel_tank_amount": 23.0
 	}
 ]
 const TERRAIN_BASE_MIN := 0.62
@@ -151,7 +151,7 @@ func _normalize_background_style(raw_style: Variant) -> Dictionary:
 	var mode_value: Variant = style.get("mode")
 	if typeof(mode_value) == TYPE_STRING:
 		normalized["mode"] = String(mode_value)
-	for key in ["planet_scale", "star_density", "cloud_density", "stripe_density"]:
+	for key in ["planet_scale", "star_density", "cloud_density", "stripe_density", "prop_density"]:
 		var value: Variant = style.get(key)
 		if typeof(value) == TYPE_FLOAT or typeof(value) == TYPE_INT:
 			normalized[key] = float(value)
