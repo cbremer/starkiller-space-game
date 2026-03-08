@@ -1,0 +1,439 @@
+:root {
+  --bg: #060816;
+  --bg-soft: rgba(9, 16, 35, 0.78);
+  --panel: rgba(10, 19, 39, 0.72);
+  --panel-strong: rgba(10, 18, 34, 0.9);
+  --text: #f5f7ff;
+  --muted: #a7b1d4;
+  --cyan: #58e6ff;
+  --orange: #ff9852;
+  --border: rgba(124, 221, 255, 0.24);
+  --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  --radius: 24px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top, rgba(255, 152, 82, 0.18), transparent 30%),
+    radial-gradient(circle at 20% 20%, rgba(88, 230, 255, 0.18), transparent 25%),
+    linear-gradient(180deg, #03050d 0%, #071021 55%, #03050d 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
+    repeating-linear-gradient(
+      180deg,
+      rgba(88, 230, 255, 0.04) 0,
+      rgba(88, 230, 255, 0.04) 1px,
+      transparent 1px,
+      transparent 6px
+    );
+  opacity: 0.28;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-shell {
+  width: min(1200px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 72px;
+}
+
+.topbar,
+.hero-copy,
+.panel-card,
+.feature-card,
+.gallery-card,
+.play-card {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 18px 22px;
+  border-radius: 999px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.brand-mark {
+  color: var(--orange);
+  text-shadow: 0 0 18px rgba(255, 152, 82, 0.8);
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+  color: var(--muted);
+}
+
+.nav-links a:hover,
+.nav-links a:focus-visible {
+  color: var(--cyan);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
+}
+
+.hero-copy,
+.panel-card,
+.feature-card,
+.gallery-card,
+.play-card {
+  border-radius: var(--radius);
+}
+
+.hero-copy {
+  padding: 48px;
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  line-height: 0.95;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.02;
+  margin-bottom: 16px;
+}
+
+h3 {
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+}
+
+.hero-text,
+.feature-card p,
+.gallery-copy p,
+.play-card p {
+  color: var(--muted);
+  font-size: 1.03rem;
+  line-height: 1.7;
+}
+
+.cta-row,
+.play-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 28px 0 34px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-weight: 700;
+  transition: transform 0.18s ease;
+  outline: none;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.button:focus-visible {
+  transform: translateY(-2px);
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px rgba(88, 230, 255, 0.35);
+}
+
+.button-primary {
+  color: #08111f;
+  background: linear-gradient(135deg, #ffe18c, var(--orange));
+  box-shadow: 0 12px 30px rgba(255, 152, 82, 0.28);
+}
+
+.button-secondary {
+  border: 1px solid rgba(88, 230, 255, 0.42);
+  background: rgba(7, 18, 37, 0.66);
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.hero-stats li {
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hero-stats strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--orange);
+  font-size: 1.6rem;
+}
+
+.hero-stats span {
+  color: var(--muted);
+}
+
+.hero-panel {
+  display: grid;
+  gap: 24px;
+}
+
+.panel-card {
+  padding: 18px;
+}
+
+.panel-label {
+  margin-bottom: 14px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.panel-image,
+.gallery-image {
+  border-radius: 18px;
+  background-color: #091123;
+  background-position: center;
+  background-size: cover;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.panel-image-main {
+  min-height: 520px;
+  background-image:
+    linear-gradient(180deg, rgba(3, 5, 13, 0.05), rgba(3, 5, 13, 0.38)),
+    url("../assets/concept_samples/environment_tiles/jupiter_shear_concept.png");
+}
+
+.hud-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hud-grid > div {
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(88, 230, 255, 0.06);
+  border: 1px solid rgba(88, 230, 255, 0.12);
+}
+
+.hud-key {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+}
+
+.section {
+  padding-top: 92px;
+}
+
+.section-heading {
+  max-width: 760px;
+  margin-bottom: 28px;
+}
+
+.feature-grid,
+.gallery-grid {
+  display: grid;
+  gap: 22px;
+}
+
+.feature-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.feature-card,
+.gallery-card {
+  overflow: hidden;
+}
+
+.feature-card {
+  padding: 28px;
+}
+
+.feature-card:nth-child(2) {
+  background:
+    linear-gradient(180deg, rgba(255, 92, 207, 0.08), rgba(10, 19, 39, 0.72)),
+    var(--panel);
+}
+
+.feature-card:nth-child(3) {
+  background:
+    linear-gradient(180deg, rgba(255, 152, 82, 0.08), rgba(10, 19, 39, 0.72)),
+    var(--panel);
+}
+
+.gallery-grid {
+  grid-template-columns: 1.15fr 0.85fr 0.85fr;
+}
+
+.gallery-image {
+  min-height: 320px;
+}
+
+.gallery-image-01 {
+  background-image:
+    linear-gradient(180deg, rgba(5, 8, 20, 0.1), rgba(5, 8, 20, 0.45)),
+    url("../assets/concept_samples/environment_tiles/jupiter_shear_concept.png");
+}
+
+.gallery-image-02 {
+  background-image:
+    linear-gradient(180deg, rgba(5, 8, 20, 0.14), rgba(5, 8, 20, 0.52)),
+    url("../assets/concept_samples/environment_tiles/berkey_frontier_concept.png");
+}
+
+.gallery-image-03 {
+  background-image:
+    linear-gradient(180deg, rgba(5, 8, 20, 0.14), rgba(5, 8, 20, 0.52)),
+    url("../assets/concept_samples/environment_tiles/lunar_tunnel_concept.png");
+}
+
+.gallery-copy {
+  padding: 22px;
+}
+
+.play-card {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
+  padding: 34px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 152, 82, 0.18), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(88, 230, 255, 0.16), transparent 34%),
+    var(--panel-strong);
+}
+
+.play-actions {
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .hero-grid,
+  .play-card,
+  .feature-grid,
+  .gallery-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .page-shell {
+    width: min(1200px, calc(100% - 20px));
+    padding-top: 12px;
+  }
+
+  .topbar {
+    flex-direction: column;
+    border-radius: 28px;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .hero-copy,
+  .feature-card,
+  .gallery-copy,
+  .play-card {
+    padding: 22px;
+  }
+
+  .hero-stats,
+  .hud-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-image-main,
+  .gallery-image {
+    min-height: 240px;
+  }
+
+  .section {
+    padding-top: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .button {
+    transition: none;
+  }
+
+  .button:hover,
+  .button:focus-visible {
+    transform: none;
+  }
+}
