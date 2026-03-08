@@ -265,7 +265,7 @@ h3 {
   min-height: 520px;
   background-image:
     linear-gradient(180deg, rgba(3, 5, 13, 0.05), rgba(3, 5, 13, 0.38)),
-    url("../assets/concept_samples/environment_tiles/jupiter_shear_concept.png");
+    url("./assets/concept_samples/environment_tiles/jupiter_shear_concept.png");
 }
 
 .hud-grid {
@@ -340,19 +340,19 @@ h3 {
 .gallery-image-01 {
   background-image:
     linear-gradient(180deg, rgba(5, 8, 20, 0.1), rgba(5, 8, 20, 0.45)),
-    url("../assets/concept_samples/environment_tiles/jupiter_shear_concept.png");
+    url("./assets/concept_samples/environment_tiles/jupiter_shear_concept.png");
 }
 
 .gallery-image-02 {
   background-image:
     linear-gradient(180deg, rgba(5, 8, 20, 0.14), rgba(5, 8, 20, 0.52)),
-    url("../assets/concept_samples/environment_tiles/berkey_frontier_concept.png");
+    url("./assets/concept_samples/environment_tiles/berkey_frontier_concept.png");
 }
 
 .gallery-image-03 {
   background-image:
     linear-gradient(180deg, rgba(5, 8, 20, 0.14), rgba(5, 8, 20, 0.52)),
-    url("../assets/concept_samples/environment_tiles/lunar_tunnel_concept.png");
+    url("./assets/concept_samples/environment_tiles/lunar_tunnel_concept.png");
 }
 
 .gallery-copy {
