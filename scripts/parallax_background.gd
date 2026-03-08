@@ -2,38 +2,91 @@ extends Node2D
 
 const SPACEPORT_SPIRES_TEXTURE := preload("res://assets/concept_samples/props/spaceport_spires.svg")
 const MONOLITH_GATE_TEXTURE := preload("res://assets/concept_samples/props/monolith_gate.svg")
+const SEGMENT_PALETTES := [
+	{
+		"sky": Color(0.39, 0.62, 0.84),
+		"haze": Color(0.53, 0.69, 0.78, 0.8),
+		"cloud": Color(0.92, 0.95, 1.0, 0.45),
+		"far_hill": Color(0.22, 0.40, 0.48),
+		"mid_hill": Color(0.15, 0.32, 0.38)
+	},
+	{
+		"sky": Color(0.47, 0.56, 0.70),
+		"haze": Color(0.60, 0.58, 0.50, 0.75),
+		"cloud": Color(0.88, 0.84, 0.77, 0.38),
+		"far_hill": Color(0.36, 0.33, 0.28),
+		"mid_hill": Color(0.29, 0.24, 0.18)
+	},
+	{
+		"sky": Color(0.30, 0.35, 0.50),
+		"haze": Color(0.41, 0.38, 0.45, 0.72),
+		"cloud": Color(0.74, 0.72, 0.88, 0.34),
+		"far_hill": Color(0.22, 0.19, 0.30),
+		"mid_hill": Color(0.16, 0.13, 0.22)
+	}
+]
+const SEGMENT_STYLES := [
+	{"mode": "atmosphere", "planet_scale": 1.0, "cloud_density": 1.0},
+	{"mode": "atmosphere", "planet_scale": 1.2, "cloud_density": 0.8},
+	{"mode": "space", "planet_scale": 1.4, "star_density": 1.3}
+]
 
 var _scroll_distance := 0.0
 var _segment_index := 0
 var _palette_override: Dictionary = {}
 var _style_override: Dictionary = {}
+var _resolved_palette: Dictionary = SEGMENT_PALETTES[0]
+var _resolved_style: Dictionary = SEGMENT_STYLES[0]
 
 func set_scroll_distance(distance: float) -> void:
+	if is_equal_approx(_scroll_distance, distance):
+		return
 	_scroll_distance = distance
 	queue_redraw()
 
 func set_segment_index(index: int) -> void:
-	_segment_index = max(index, 0)
+	var next_index: int = max(index, 0)
+	if _segment_index == next_index:
+		return
+	_segment_index = next_index
+	_refresh_palette_cache()
+	_refresh_style_cache()
 	queue_redraw()
 
 func set_palette_override(palette: Dictionary) -> void:
-	if typeof(palette) == TYPE_DICTIONARY:
-		_palette_override = palette
-	else:
-		_palette_override = {}
+	var next_override: Dictionary = palette if typeof(palette) == TYPE_DICTIONARY else {}
+	if _palette_override == next_override:
+		return
+	_palette_override = next_override
+	_refresh_palette_cache()
 	queue_redraw()
 
 func set_style_override(style: Dictionary) -> void:
-	if typeof(style) == TYPE_DICTIONARY:
-		_style_override = style
-	else:
-		_style_override = {}
+	var next_override: Dictionary = style if typeof(style) == TYPE_DICTIONARY else {}
+	if _style_override == next_override:
+		return
+	_style_override = next_override
+	_refresh_style_cache()
 	queue_redraw()
+
+func _refresh_palette_cache() -> void:
+	var base_palette: Dictionary = SEGMENT_PALETTES[min(_segment_index, SEGMENT_PALETTES.size() - 1)]
+	_resolved_palette = base_palette if _palette_override.is_empty() else _merge_palette(base_palette, _palette_override)
+
+func _refresh_style_cache() -> void:
+	var base_style: Dictionary = SEGMENT_STYLES[min(_segment_index, SEGMENT_STYLES.size() - 1)]
+	if _style_override.is_empty():
+		_resolved_style = base_style
+		return
+	var merged: Dictionary = base_style.duplicate(true)
+	for key in _style_override.keys():
+		merged[key] = _style_override[key]
+	_resolved_style = merged
 
 func _draw() -> void:
 	var size := get_viewport_rect().size
-	var palette := _palette_for_segment(_segment_index)
-	var style := _style_for_segment(_segment_index)
+	var palette := _resolved_palette
+	var style := _resolved_style
 
 	draw_rect(Rect2(Vector2.ZERO, size), palette["sky"])
 	draw_rect(Rect2(Vector2(0, size.y * 0.48), Vector2(size.x, size.y * 0.52)), palette["haze"])
@@ -171,31 +224,6 @@ func _draw_hill_band(size: Vector2, parallax: float, base_y: float, amplitude: f
 		var y := base_y + sin(world_x * 0.0103) * amplitude + cos(world_x * 0.0048) * amplitude * 0.65
 		draw_line(Vector2(x, y), Vector2(x, size.y), color, step + 1.0)
 		x += step
-
-func _palette_for_segment(index: int) -> Dictionary:
-	var palettes := [
-		{"sky": Color(0.39, 0.62, 0.84), "haze": Color(0.53, 0.69, 0.78, 0.8), "cloud": Color(0.92, 0.95, 1.0, 0.45), "far_hill": Color(0.22, 0.40, 0.48), "mid_hill": Color(0.15, 0.32, 0.38)},
-		{"sky": Color(0.47, 0.56, 0.70), "haze": Color(0.60, 0.58, 0.50, 0.75), "cloud": Color(0.88, 0.84, 0.77, 0.38), "far_hill": Color(0.36, 0.33, 0.28), "mid_hill": Color(0.29, 0.24, 0.18)},
-		{"sky": Color(0.30, 0.35, 0.50), "haze": Color(0.41, 0.38, 0.45, 0.72), "cloud": Color(0.74, 0.72, 0.88, 0.34), "far_hill": Color(0.22, 0.19, 0.30), "mid_hill": Color(0.16, 0.13, 0.22)}
-	]
-	var palette: Dictionary = palettes[min(index, palettes.size() - 1)]
-	if _palette_override.is_empty():
-		return palette
-	return _merge_palette(palette, _palette_override)
-
-func _style_for_segment(index: int) -> Dictionary:
-	var defaults := [
-		{"mode": "atmosphere", "planet_scale": 1.0, "cloud_density": 1.0},
-		{"mode": "atmosphere", "planet_scale": 1.2, "cloud_density": 0.8},
-		{"mode": "space", "planet_scale": 1.4, "star_density": 1.3}
-	]
-	var style: Dictionary = defaults[min(index, defaults.size() - 1)]
-	if _style_override.is_empty():
-		return style
-	var merged := style.duplicate(true)
-	for key in _style_override.keys():
-		merged[key] = _style_override[key]
-	return merged
 
 func _merge_palette(base: Dictionary, override: Dictionary) -> Dictionary:
 	var merged: Dictionary = base.duplicate(true)
