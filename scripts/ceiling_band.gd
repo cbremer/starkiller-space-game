@@ -1,8 +1,40 @@
 extends Node2D
 
+const SEGMENT_PROFILES := [
+	{
+		"base": 0.16,
+		"amp": 18.0,
+		"fill": Color(0.14, 0.17, 0.13),
+		"line": Color(0.27, 0.35, 0.24)
+	},
+	{
+		"base": 0.17,
+		"amp": 26.0,
+		"fill": Color(0.21, 0.17, 0.12),
+		"line": Color(0.39, 0.31, 0.20)
+	},
+	{
+		"base": 0.18,
+		"amp": 34.0,
+		"fill": Color(0.17, 0.13, 0.21),
+		"line": Color(0.31, 0.24, 0.40)
+	}
+]
+
 var _scroll_distance := 0.0
 var _segment_index := 0
 var _profile_override: Dictionary = {}
+var _base_ratio := 0.16
+var _amplitude := 18.0
+var _freq_a := 0.0089
+var _freq_b := 0.019
+var _freq_c := 0.0037
+var _weight_b := 0.46
+var _weight_c := 0.80
+var _jagged := 0.0
+var _sample_step := 20.0
+var _fill_color := Color(0.14, 0.17, 0.13)
+var _line_color := Color(0.27, 0.35, 0.24)
 
 const BASE_MIN := 0.05
 const BASE_MAX := 0.40
@@ -10,98 +42,84 @@ const AMP_MIN := 4.0
 const AMP_MAX := 120.0
 
 func set_scroll_distance(distance: float) -> void:
+	if is_equal_approx(_scroll_distance, distance):
+		return
 	_scroll_distance = distance
 	queue_redraw()
 
 func set_segment_index(index: int) -> void:
-	_segment_index = max(index, 0)
+	var next_index: int = max(index, 0)
+	if _segment_index == next_index:
+		return
+	_segment_index = next_index
+	_refresh_profile_cache()
 	queue_redraw()
 
 func set_profile_override(profile: Dictionary) -> void:
-	if typeof(profile) == TYPE_DICTIONARY:
-		_profile_override = profile
-	else:
-		_profile_override = {}
+	var next_override: Dictionary = profile if typeof(profile) == TYPE_DICTIONARY else {}
+	if _profile_override == next_override:
+		return
+	_profile_override = next_override
+	_refresh_profile_cache()
 	queue_redraw()
 
 func ceiling_height_at_screen_x(screen_x: float) -> float:
 	var size := get_viewport_rect().size
-	var profile := _profile_for_segment(_segment_index)
-	var world_x := screen_x + _scroll_distance
-	var base := size.y * float(profile["base"])
-	var amp := float(profile["amp"])
-	var freq_a := float(profile.get("freq_a", 0.0089))
-	var freq_b := float(profile.get("freq_b", 0.019))
-	var freq_c := float(profile.get("freq_c", 0.0037))
-	var weight_b := float(profile.get("weight_b", 0.46))
-	var weight_c := float(profile.get("weight_c", 0.80))
-	var jagged := float(profile.get("jagged", 0.0))
-	var y := base
-	y += sin(world_x * freq_a) * amp
-	y += cos(world_x * freq_b) * amp * weight_b
-	y += sin(world_x * freq_c) * amp * weight_c
-	if jagged > 0.0:
-		y += (snapped(cos(world_x * 0.14), 0.2) * amp * 0.30 * jagged)
-	return clampf(y, 26.0, size.y * 0.42)
+	return _ceiling_height_for_world_x(screen_x + _scroll_distance, size.y)
 
 func _draw() -> void:
 	var size := get_viewport_rect().size
-	var profile := _profile_for_segment(_segment_index)
-	var fill_color: Color = profile["fill"]
-	var line_color: Color = profile["line"]
 	var points := PackedVector2Array()
 	var ridge := PackedVector2Array()
 
 	points.push_back(Vector2(0, 0))
-	var step := maxf(8.0, float(profile.get("step", 20.0)))
+	var step := _sample_step
 	var x := 0.0
 	while x <= size.x + step:
-		var y := ceiling_height_at_screen_x(x)
+		var y := _ceiling_height_for_world_x(x + _scroll_distance, size.y)
 		var point := Vector2(x, y)
 		points.push_back(point)
 		ridge.push_back(point)
 		x += step
 	points.push_back(Vector2(size.x + step, 0))
 
-	draw_colored_polygon(points, fill_color)
-	draw_polyline(ridge, line_color, 2.5)
-	_draw_ceiling_teeth(ridge, line_color)
+	draw_colored_polygon(points, _fill_color)
+	draw_polyline(ridge, _line_color, 2.5)
+	_draw_ceiling_teeth(ridge)
 
-func _draw_ceiling_teeth(ridge: PackedVector2Array, line_color: Color) -> void:
+func _draw_ceiling_teeth(ridge: PackedVector2Array) -> void:
 	if ridge.size() < 2:
 		return
-	var tooth_color := line_color.lerp(Color.WHITE, 0.08)
+	var tooth_color := _line_color.lerp(Color.WHITE, 0.08)
 	tooth_color.a = 0.34
 	for i in range(0, ridge.size(), 3):
 		var p := ridge[i]
 		var tooth_len := 11.0 + (sin((p.x + _scroll_distance) * 0.09) + 1.0) * 7.5
 		draw_line(p, p + Vector2(0, tooth_len), tooth_color, 1.0)
 
-func _profile_for_segment(index: int) -> Dictionary:
-	var profiles := [
-		{
-			"base": 0.16,
-			"amp": 18.0,
-			"fill": Color(0.14, 0.17, 0.13),
-			"line": Color(0.27, 0.35, 0.24)
-		},
-		{
-			"base": 0.17,
-			"amp": 26.0,
-			"fill": Color(0.21, 0.17, 0.12),
-			"line": Color(0.39, 0.31, 0.20)
-		},
-		{
-			"base": 0.18,
-			"amp": 34.0,
-			"fill": Color(0.17, 0.13, 0.21),
-			"line": Color(0.31, 0.24, 0.40)
-		}
-	]
-	var profile: Dictionary = profiles[min(index, profiles.size() - 1)]
-	if _profile_override.is_empty():
-		return profile
-	return _merge_profile(profile, _profile_override)
+func _refresh_profile_cache() -> void:
+	var base_profile: Dictionary = SEGMENT_PROFILES[min(_segment_index, SEGMENT_PROFILES.size() - 1)]
+	var resolved := base_profile if _profile_override.is_empty() else _merge_profile(base_profile, _profile_override)
+	_base_ratio = float(resolved["base"])
+	_amplitude = float(resolved["amp"])
+	_freq_a = float(resolved.get("freq_a", 0.0089))
+	_freq_b = float(resolved.get("freq_b", 0.019))
+	_freq_c = float(resolved.get("freq_c", 0.0037))
+	_weight_b = float(resolved.get("weight_b", 0.46))
+	_weight_c = float(resolved.get("weight_c", 0.80))
+	_jagged = float(resolved.get("jagged", 0.0))
+	_sample_step = maxf(8.0, float(resolved.get("step", 20.0)))
+	_fill_color = resolved["fill"]
+	_line_color = resolved["line"]
+
+func _ceiling_height_for_world_x(world_x: float, viewport_height: float) -> float:
+	var y := viewport_height * _base_ratio
+	y += sin(world_x * _freq_a) * _amplitude
+	y += cos(world_x * _freq_b) * _amplitude * _weight_b
+	y += sin(world_x * _freq_c) * _amplitude * _weight_c
+	if _jagged > 0.0:
+		y += snapped(cos(world_x * 0.14), 0.2) * _amplitude * 0.30 * _jagged
+	return clampf(y, 26.0, viewport_height * 0.42)
 
 func _merge_profile(base: Dictionary, override: Dictionary) -> Dictionary:
 	var merged: Dictionary = base.duplicate(true)

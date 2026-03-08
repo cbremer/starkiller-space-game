@@ -74,9 +74,12 @@ func update(delta: float) -> void:
 	if not run_started or is_paused:
 		return
 	if not is_alive and lives > 0:
+		var previous_respawn_tenths := _respawn_tenths_remaining()
 		_respawn_remaining = maxf(0.0, _respawn_remaining - delta)
 		if _respawn_remaining <= 0.0:
 			respawn()
+		elif _respawn_tenths_remaining() != previous_respawn_tenths:
+			changed.emit()
 
 func respawn() -> void:
 	if lives <= 0:
@@ -94,3 +97,6 @@ func status_text() -> String:
 	if is_alive:
 		return "Alive"
 	return "Respawning in %.1fs" % _respawn_remaining
+
+func _respawn_tenths_remaining() -> int:
+	return maxi(0, int(round(_respawn_remaining * 10.0)))

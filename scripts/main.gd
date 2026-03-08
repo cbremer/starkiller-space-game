@@ -71,6 +71,27 @@ const DEFAULT_KEY_BINDINGS := {
 const INPUT_BINDINGS_SETTINGS_PATH := "user://settings.cfg"
 const INPUT_BINDINGS_SECTION := "input_bindings"
 const START_SUBMENU_OPTIONS := ["start", "controls", "window_mode", "back"]
+const INPUT_DEBUG_ACTIONS: Array[String] = [
+	"move_up",
+	"move_down",
+	"move_left",
+	"move_right",
+	"fire",
+	"bomb",
+	"start",
+	"pause",
+	"toggle_fullscreen"
+]
+const DEFAULT_SFX_POOL_SIZE := 6
+
+enum TrackedNodeList {
+	ENEMIES,
+	LASER_BOLTS,
+	BOMB_PAYLOADS,
+	BOMB_BLASTS,
+	COMBAT_VFX,
+	FUEL_TANKS
+}
 
 @onready var player: Node2D = $PlayerShip
 @onready var hud: Control = $CanvasLayer/HUD
@@ -107,6 +128,14 @@ var rng := RandomNumberGenerator.new()
 var background_layer = null
 var ceiling_layer = null
 var terrain_layer = null
+var _enemy_nodes: Array[Node2D] = []
+var _laser_bolt_nodes: Array[Node2D] = []
+var _bomb_payload_nodes: Array[Node2D] = []
+var _bomb_blast_nodes: Array[Node2D] = []
+var _combat_vfx_nodes: Array[Node2D] = []
+var _fuel_tank_nodes: Array[Node2D] = []
+var _sfx_players: Array[AudioStreamPlayer] = []
+var _available_sfx_players: Array[AudioStreamPlayer] = []
 var remap_selected_index := 0
 var is_remap_menu_open := false
 var awaiting_rebind := false
@@ -116,31 +145,64 @@ var screen_shake_strength := 0.0
 var screen_shake_remaining := 0.0
 var _last_visual_segment_index := -1
 var stage_transition_remaining := 0.0
-var current_enemy_style: Dictionary = {}
 var start_menu_selected_index := 0
 var is_start_menu_details_open := false
 var start_submenu_selected_index := 0
 var is_start_controls_open := false
 var _last_input_debug_text := ""
 var _last_player_top_margin := -1.0
+var _actors_active := false
+var _last_title_overlay_visible := false
+var _last_pause_visible := false
+var _last_game_over_state := false
+var _last_info_label_key := ""
+var _last_state_label_text := ""
+var _last_fuel_value := -1.0
+var _last_fuel_value_text := ""
+var _last_action_label_text := ""
+var _last_pause_options_text := ""
+var _last_remap_list_text := ""
+var _last_remap_status_label_text := ""
 
 func _ready() -> void:
 	rng.randomize()
 	_load_startup_art()
 	_create_world_layers()
+	_prewarm_sfx_pool()
 	_load_stage_segments()
 	_ensure_fullscreen_input_action()
 	_load_input_bindings()
-	game_state.changed.connect(_update_hud)
+	game_state.changed.connect(_on_game_state_changed)
 	game_state.action_triggered.connect(_on_action_triggered)
 	game_state.player_died.connect(_on_player_died)
 	game_state.player_respawned.connect(_on_respawned)
-	_update_hud()
+	_on_game_state_changed()
 	_sync_player_playfield_bounds()
-	_set_pause_ui_visibility()
-	_update_pause_menu()
-	_update_remap_panel()
-	_update_start_screen_ui()
+	_refresh_stateful_ui(true)
+
+func _on_game_state_changed() -> void:
+	_update_hud()
+	_refresh_stateful_ui()
+
+func _refresh_stateful_ui(force := false) -> void:
+	var title_overlay_visible := _is_title_overlay_visible()
+	var game_over_state := _is_game_over()
+	var pause_visible: bool = game_state.run_started and game_state.is_paused and not game_over_state
+	var info_key := "%s|%s|%s" % [game_state.run_started, game_state.is_paused, game_state.stage_id]
+
+	if force or info_key != _last_info_label_key:
+		_last_info_label_key = info_key
+		_update_info_label()
+
+	if force or pause_visible != _last_pause_visible:
+		_last_pause_visible = pause_visible
+		_set_pause_ui_visibility()
+		_update_pause_menu()
+
+	if force or title_overlay_visible != _last_title_overlay_visible or game_over_state != _last_game_over_state:
+		_last_title_overlay_visible = title_overlay_visible
+		_last_game_over_state = game_over_state
+		_update_start_screen_ui()
 
 func _sync_player_playfield_bounds() -> void:
 	if player == null or hud == null:
@@ -164,6 +226,74 @@ func _assign_texture_from_image(target: TextureRect, image_path: String) -> void
 		push_warning("Failed to load startup art: %s" % image_path)
 		return
 	target.texture = ImageTexture.create_from_image(image)
+
+func _prewarm_sfx_pool() -> void:
+	for _i in range(DEFAULT_SFX_POOL_SIZE):
+		_create_sfx_player()
+
+func _create_sfx_player() -> AudioStreamPlayer:
+	var player_node := AudioStreamPlayer.new()
+	add_child(player_node)
+	player_node.finished.connect(_on_sfx_player_finished.bind(player_node))
+	_sfx_players.append(player_node)
+	_available_sfx_players.append(player_node)
+	return player_node
+
+func _acquire_sfx_player() -> AudioStreamPlayer:
+	if _available_sfx_players.is_empty():
+		return _create_sfx_player()
+	return _available_sfx_players.pop_back()
+
+func _on_sfx_player_finished(player_node: AudioStreamPlayer) -> void:
+	player_node.stop()
+	if not _available_sfx_players.has(player_node):
+		_available_sfx_players.append(player_node)
+
+func _reset_sfx_pool() -> void:
+	_available_sfx_players.clear()
+	for player_node in _sfx_players:
+		player_node.stop()
+		_available_sfx_players.append(player_node)
+
+func _track_spawned_node(node: Node2D, tracked_list: int) -> void:
+	match tracked_list:
+		TrackedNodeList.ENEMIES:
+			_enemy_nodes.append(node)
+		TrackedNodeList.LASER_BOLTS:
+			_laser_bolt_nodes.append(node)
+		TrackedNodeList.BOMB_PAYLOADS:
+			_bomb_payload_nodes.append(node)
+		TrackedNodeList.BOMB_BLASTS:
+			_bomb_blast_nodes.append(node)
+		TrackedNodeList.COMBAT_VFX:
+			_combat_vfx_nodes.append(node)
+		TrackedNodeList.FUEL_TANKS:
+			_fuel_tank_nodes.append(node)
+	node.tree_exited.connect(_on_tracked_node_exited.bind(node, tracked_list), CONNECT_ONE_SHOT)
+
+func _on_tracked_node_exited(node: Node2D, tracked_list: int) -> void:
+	match tracked_list:
+		TrackedNodeList.ENEMIES:
+			_enemy_nodes.erase(node)
+		TrackedNodeList.LASER_BOLTS:
+			_laser_bolt_nodes.erase(node)
+		TrackedNodeList.BOMB_PAYLOADS:
+			_bomb_payload_nodes.erase(node)
+		TrackedNodeList.BOMB_BLASTS:
+			_bomb_blast_nodes.erase(node)
+		TrackedNodeList.COMBAT_VFX:
+			_combat_vfx_nodes.erase(node)
+		TrackedNodeList.FUEL_TANKS:
+			_fuel_tank_nodes.erase(node)
+
+func _circles_overlap(a: Vector2, b: Vector2, radius_sum: float) -> bool:
+	var dx := a.x - b.x
+	if absf(dx) > radius_sum:
+		return false
+	var dy := a.y - b.y
+	if absf(dy) > radius_sum:
+		return false
+	return dx * dx + dy * dy <= radius_sum * radius_sum
 
 func _unhandled_input(event: InputEvent) -> void:
 	var key_event := event as InputEventKey
@@ -410,7 +540,10 @@ func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("toggle_fullscreen"):
 		_toggle_fullscreen()
 
-	if game_state.run_started and game_state.is_alive and not game_state.is_paused:
+	var run_unpaused: bool = game_state.run_started and not game_state.is_paused
+	var run_active: bool = run_unpaused and game_state.is_alive
+
+	if run_active:
 		if stage_transition_remaining > 0.0:
 			_update_stage_transition(delta)
 		else:
@@ -433,12 +566,16 @@ func _process(delta: float) -> void:
 			game_state.add_fuel(REFUEL_PER_SECOND * delta)
 
 		_update_combat_state()
-		game_state.update(delta)
 		_update_world_layers()
 		_update_ground_enemy_attachment()
-		player.visible = game_state.is_alive
-	player.set_physics_process(game_state.run_started and game_state.is_alive and not game_state.is_paused)
-	_set_actor_activity(game_state.run_started and game_state.is_alive and not game_state.is_paused)
+
+	if run_unpaused:
+		game_state.update(delta)
+
+	player.visible = game_state.is_alive
+	var actors_should_run: bool = game_state.run_started and game_state.is_alive and not game_state.is_paused
+	player.set_physics_process(actors_should_run)
+	_set_actor_activity(actors_should_run)
 	_update_input_debug()
 	_update_screen_shake(delta)
 
@@ -448,6 +585,7 @@ func _start_run() -> void:
 	position = Vector2.ZERO
 	screen_shake_strength = 0.0
 	screen_shake_remaining = 0.0
+	_reset_sfx_pool()
 	_clear_combat_nodes()
 	_reset_run_progression()
 	enemy_spawn_remaining = 0.35
@@ -458,10 +596,8 @@ func _start_run() -> void:
 	start_menu_selected_index = 0
 	start_submenu_selected_index = 0
 	is_start_controls_open = false
-	_set_pause_ui_visibility()
-	_update_pause_menu()
+	_refresh_stateful_ui(true)
 	_update_remap_panel()
-	_update_start_screen_ui()
 
 func _start_menu_option_line(index: int, label: String) -> String:
 	var marker := ">" if start_submenu_selected_index == index else " "
@@ -480,13 +616,13 @@ func _play_sfx(cue_name: String, volume_db := -8.0, pitch_jitter := 0.06) -> voi
 	var stream: AudioStreamWAV = SFX_SYNTH_SCRIPT.stream_for(cue_name)
 	if stream == null:
 		return
-	var sfx_player := AudioStreamPlayer.new()
+	var sfx_player := _acquire_sfx_player()
 	sfx_player.stream = stream
 	sfx_player.volume_db = volume_db
 	if pitch_jitter > 0.0:
 		sfx_player.pitch_scale = rng.randf_range(1.0 - pitch_jitter, 1.0 + pitch_jitter)
-	add_child(sfx_player)
-	sfx_player.finished.connect(sfx_player.queue_free)
+	else:
+		sfx_player.pitch_scale = 1.0
 	sfx_player.play()
 
 func _spawn_impact_flash(world_position: Vector2, radius := 24.0, color := Color(1.0, 0.92, 0.58, 0.8)) -> void:
@@ -495,6 +631,7 @@ func _spawn_impact_flash(world_position: Vector2, radius := 24.0, color := Color
 	flash.set("end_radius", radius)
 	flash.set("fill_color", color)
 	add_child(flash)
+	_track_spawned_node(flash, TrackedNodeList.COMBAT_VFX)
 
 func _spawn_explosion(world_position: Vector2, major := false) -> void:
 	var explosion := EXPLOSION_PARTICLES_SCRIPT.new()
@@ -504,6 +641,7 @@ func _spawn_explosion(world_position: Vector2, major := false) -> void:
 		explosion.set("speed_max", 320.0)
 		explosion.set("lifetime", 0.48)
 	add_child(explosion)
+	_track_spawned_node(explosion, TrackedNodeList.COMBAT_VFX)
 
 func _trigger_screen_shake(strength: float, duration: float) -> void:
 	screen_shake_strength = maxf(screen_shake_strength, strength)
@@ -533,6 +671,7 @@ func _spawn_bolt() -> void:
 	var bolt := LASER_BOLT_SCRIPT.new()
 	bolt.position = player.position + BOLT_SPAWN_OFFSET
 	add_child(bolt)
+	_track_spawned_node(bolt, TrackedNodeList.LASER_BOLTS)
 	_play_sfx("fire", -12.0, 0.08)
 	_spawn_impact_flash(bolt.position + Vector2(-8.0, 0.0), 16.0, Color(0.95, 0.98, 0.72, 0.7))
 
@@ -558,6 +697,7 @@ func _spawn_enemy() -> void:
 		if rng.randf() < distant_chance:
 			enemy.set("is_distant", true)
 	add_child(enemy)
+	_track_spawned_node(enemy, TrackedNodeList.ENEMIES)
 
 func _air_spawn_y_at(screen_x: float) -> float:
 	var viewport_size := get_viewport_rect().size
@@ -602,6 +742,7 @@ func _drop_bomb() -> void:
 	var payload := BOMB_PAYLOAD_SCRIPT.new()
 	payload.position = player.position + BOMB_DROP_OFFSET
 	add_child(payload)
+	_track_spawned_node(payload, TrackedNodeList.BOMB_PAYLOADS)
 	_play_sfx("bomb_drop", -10.0, 0.04)
 
 func _spawn_fuel_tank() -> void:
@@ -617,6 +758,7 @@ func _spawn_fuel_tank() -> void:
 	var segment = _current_segment()
 	tank.set("fuel_amount", float(segment["fuel_tank_amount"]))
 	add_child(tank)
+	_track_spawned_node(tank, TrackedNodeList.FUEL_TANKS)
 
 func _update_fuel_tank_spawns(delta: float) -> void:
 	var segment = _current_segment()
@@ -632,40 +774,38 @@ func _update_combat_state() -> void:
 	if not game_state.run_started or not game_state.is_alive or game_state.is_paused:
 		return
 
-	var enemy_nodes := get_tree().get_nodes_in_group("enemy_targets")
-	var bolt_nodes := get_tree().get_nodes_in_group("laser_bolts")
-	var bomb_nodes := get_tree().get_nodes_in_group("bomb_payloads")
-	var fuel_tank_nodes := get_tree().get_nodes_in_group("fuel_tanks")
-	var ceiling_height := _ceiling_height_at(player.position.x)
-	var terrain_height := _terrain_height_at(player.position.x)
+	var player_position := player.position
+	var ceiling_height := _ceiling_height_at(player_position.x)
+	var terrain_height := _terrain_height_at(player_position.x)
 
-	if player.position.y - PLAYER_CEILING_CLEARANCE <= ceiling_height:
+	if player_position.y - PLAYER_CEILING_CLEARANCE <= ceiling_height:
 		_handle_player_death("Crashed into ceiling")
 		return
 
-	if player.position.y + PLAYER_TERRAIN_CLEARANCE >= terrain_height:
+	if player_position.y + PLAYER_TERRAIN_CLEARANCE >= terrain_height:
 		_handle_player_death("Crashed into terrain")
 		return
 
-	for enemy_node in enemy_nodes:
+	for enemy_node in _enemy_nodes:
 		if enemy_node == null or enemy_node.is_queued_for_deletion() or not enemy_node.has_method("apply_hit"):
 			continue
 
 		var enemy_type := String(enemy_node.get("target_type"))
 		var enemy_hit_radius := float(enemy_node.get("hit_radius"))
+		var enemy_position := enemy_node.position
 
-		if enemy_type == "air" and enemy_node.position.distance_to(player.position) <= (enemy_hit_radius + PLAYER_HIT_RADIUS):
+		if enemy_type == "air" and _circles_overlap(enemy_position, player_position, enemy_hit_radius + PLAYER_HIT_RADIUS):
 			enemy_node.apply_hit("ship")
 			_handle_player_death("Ship hit by enemy")
 			return
 
 		if enemy_type == "air":
-			for bolt_node in bolt_nodes:
+			for bolt_node in _laser_bolt_nodes:
 				if bolt_node == null or bolt_node.is_queued_for_deletion():
 					continue
 				var bolt_hit_radius := float(bolt_node.get("hit_radius"))
-				if bolt_node.position.distance_to(enemy_node.position) <= (bolt_hit_radius + enemy_hit_radius):
-					var impact_position := Vector2(enemy_node.position)
+				if _circles_overlap(bolt_node.position, enemy_position, bolt_hit_radius + enemy_hit_radius):
+					var impact_position := enemy_position
 					var air_points := int(enemy_node.apply_hit("laser"))
 					if air_points > 0:
 						game_state.add_score(air_points)
@@ -677,12 +817,15 @@ func _update_combat_state() -> void:
 					bolt_node.queue_free()
 					break
 
-		for bomb_node in bomb_nodes:
+		if enemy_node.is_queued_for_deletion():
+			continue
+
+		for bomb_node in _bomb_payload_nodes:
 			if bomb_node == null or bomb_node.is_queued_for_deletion():
 				continue
 			var bomb_hit_radius := float(bomb_node.get("hit_radius"))
-			if bomb_node.position.distance_to(enemy_node.position) <= (bomb_hit_radius + enemy_hit_radius):
-				var impact_position := Vector2(enemy_node.position)
+			if _circles_overlap(bomb_node.position, enemy_position, bomb_hit_radius + enemy_hit_radius):
+				var impact_position := enemy_position
 				var bomb_points := int(enemy_node.apply_hit("bomb"))
 				if bomb_points > 0:
 					game_state.add_score(bomb_points)
@@ -695,13 +838,13 @@ func _update_combat_state() -> void:
 				bomb_node.queue_free()
 				break
 
-	_process_bomb_ground_impacts(enemy_nodes, bomb_nodes)
+	_process_bomb_ground_impacts()
 
-	for fuel_tank_node in fuel_tank_nodes:
-		if fuel_tank_node == null:
+	for fuel_tank_node in _fuel_tank_nodes:
+		if fuel_tank_node == null or fuel_tank_node.is_queued_for_deletion():
 			continue
 		var tank_radius := float(fuel_tank_node.get("hit_radius"))
-		if fuel_tank_node.position.distance_to(player.position) <= (tank_radius + PLAYER_HIT_RADIUS):
+		if _circles_overlap(fuel_tank_node.position, player_position, tank_radius + PLAYER_HIT_RADIUS):
 			var fuel_gain := float(fuel_tank_node.get("fuel_amount"))
 			game_state.add_fuel(fuel_gain)
 			last_action_text = "Fuel tank collected (+%d)" % int(fuel_gain)
@@ -710,34 +853,35 @@ func _update_combat_state() -> void:
 			_spawn_impact_flash(fuel_tank_node.position, 20.0, Color(0.68, 0.96, 0.6, 0.78))
 			fuel_tank_node.queue_free()
 
-func _process_bomb_ground_impacts(enemy_nodes: Array, bomb_nodes: Array) -> void:
-	for bomb_node in bomb_nodes:
+func _process_bomb_ground_impacts() -> void:
+	for bomb_node in _bomb_payload_nodes:
 		if bomb_node == null or bomb_node.is_queued_for_deletion():
 			continue
 		var terrain_y := _terrain_height_at(bomb_node.position.x)
 		if bomb_node.position.y < terrain_y - 4.0:
 			continue
 		var impact_position := Vector2(bomb_node.position.x, terrain_y - 2.0)
-		_detonate_bomb_on_ground(impact_position, enemy_nodes)
+		_detonate_bomb_on_ground(impact_position)
 		bomb_node.queue_free()
 
-func _detonate_bomb_on_ground(impact_position: Vector2, enemy_nodes: Array) -> void:
+func _detonate_bomb_on_ground(impact_position: Vector2) -> void:
 	var blast := BOMB_BLAST_SCRIPT.new()
 	blast.position = impact_position
 	add_child(blast)
+	_track_spawned_node(blast, TrackedNodeList.BOMB_BLASTS)
 	_play_sfx("impact", -5.8, 0.05)
 	_spawn_impact_flash(impact_position, 40.0, Color(1.0, 0.78, 0.45, 0.82))
 	_spawn_explosion(impact_position, true)
 	_trigger_screen_shake(MAJOR_SHAKE_STRENGTH, 0.16)
 
 	var kills := 0
-	for enemy_node in enemy_nodes:
+	for enemy_node in _enemy_nodes:
 		if enemy_node == null or enemy_node.is_queued_for_deletion() or not enemy_node.has_method("apply_hit"):
 			continue
 		var enemy_hit_radius := float(enemy_node.get("hit_radius"))
-		if enemy_node.position.distance_to(impact_position) > (BOMB_GROUND_BLAST_RADIUS + enemy_hit_radius):
+		if not _circles_overlap(enemy_node.position, impact_position, BOMB_GROUND_BLAST_RADIUS + enemy_hit_radius):
 			continue
-		var enemy_position := Vector2(enemy_node.position)
+		var enemy_position := enemy_node.position
 		var points := int(enemy_node.apply_hit("bomb"))
 		if points <= 0:
 			continue
@@ -754,7 +898,7 @@ func _detonate_bomb_on_ground(impact_position: Vector2, enemy_nodes: Array) -> v
 	action_label.text = "Last Action: %s" % last_action_text
 
 func _update_ground_enemy_attachment() -> void:
-	for enemy_node in get_tree().get_nodes_in_group("enemy_targets"):
+	for enemy_node in _enemy_nodes:
 		if enemy_node == null or enemy_node.is_queued_for_deletion():
 			continue
 		if String(enemy_node.get("target_type")) != "ground":
@@ -762,32 +906,41 @@ func _update_ground_enemy_attachment() -> void:
 		enemy_node.position.y = _terrain_height_at(enemy_node.position.x) - GROUND_UNIT_CLEARANCE
 
 func _set_actor_activity(is_active: bool) -> void:
-	for bolt_node in get_tree().get_nodes_in_group("laser_bolts"):
+	if _actors_active == is_active:
+		return
+	_actors_active = is_active
+	for bolt_node in _laser_bolt_nodes:
 		if bolt_node != null:
 			bolt_node.set("is_active", is_active)
-	for bomb_node in get_tree().get_nodes_in_group("bomb_payloads"):
+	for bomb_node in _bomb_payload_nodes:
 		if bomb_node != null:
 			bomb_node.set("is_active", is_active)
-	for fuel_tank_node in get_tree().get_nodes_in_group("fuel_tanks"):
+	for fuel_tank_node in _fuel_tank_nodes:
 		if fuel_tank_node != null:
 			fuel_tank_node.set("is_active", is_active)
-	for enemy_node in get_tree().get_nodes_in_group("enemy_targets"):
+	for enemy_node in _enemy_nodes:
 		if enemy_node != null:
 			enemy_node.set("is_active", is_active)
 
 func _clear_combat_nodes() -> void:
-	for bolt_node in get_tree().get_nodes_in_group("laser_bolts"):
+	for bolt_node in _laser_bolt_nodes:
 		bolt_node.queue_free()
-	for bomb_node in get_tree().get_nodes_in_group("bomb_payloads"):
+	for bomb_node in _bomb_payload_nodes:
 		bomb_node.queue_free()
-	for blast_node in get_tree().get_nodes_in_group("bomb_blasts"):
+	for blast_node in _bomb_blast_nodes:
 		blast_node.queue_free()
-	for vfx_node in get_tree().get_nodes_in_group("combat_vfx"):
+	for vfx_node in _combat_vfx_nodes:
 		vfx_node.queue_free()
-	for fuel_tank_node in get_tree().get_nodes_in_group("fuel_tanks"):
+	for fuel_tank_node in _fuel_tank_nodes:
 		fuel_tank_node.queue_free()
-	for enemy_node in get_tree().get_nodes_in_group("enemy_targets"):
+	for enemy_node in _enemy_nodes:
 		enemy_node.queue_free()
+	_laser_bolt_nodes.clear()
+	_bomb_payload_nodes.clear()
+	_bomb_blast_nodes.clear()
+	_combat_vfx_nodes.clear()
+	_fuel_tank_nodes.clear()
+	_enemy_nodes.clear()
 
 func _create_world_layers() -> void:
 	if background_layer == null:
@@ -806,15 +959,18 @@ func _create_world_layers() -> void:
 
 func _update_world_layers() -> void:
 	if background_layer != null:
-		background_layer.call("set_scroll_distance", run_distance)
-		background_layer.call("set_segment_index", current_segment_index)
+		background_layer.set_scroll_distance(run_distance)
 	if ceiling_layer != null:
-		ceiling_layer.call("set_scroll_distance", run_distance)
-		ceiling_layer.call("set_segment_index", current_segment_index)
+		ceiling_layer.set_scroll_distance(run_distance)
 	if terrain_layer != null:
-		terrain_layer.call("set_scroll_distance", run_distance)
-		terrain_layer.call("set_segment_index", current_segment_index)
+		terrain_layer.set_scroll_distance(run_distance)
 	if current_segment_index != _last_visual_segment_index:
+		if background_layer != null:
+			background_layer.set_segment_index(current_segment_index)
+		if ceiling_layer != null:
+			ceiling_layer.set_segment_index(current_segment_index)
+		if terrain_layer != null:
+			terrain_layer.set_segment_index(current_segment_index)
 		_apply_segment_visuals()
 		_last_visual_segment_index = current_segment_index
 
@@ -824,24 +980,22 @@ func _apply_segment_visuals() -> void:
 	var ceiling_profile: Dictionary = segment.get("ceiling_profile", {})
 	var sky_palette: Dictionary = segment.get("sky_palette", {})
 	var background_style: Dictionary = segment.get("background_style", {})
-	current_enemy_style = segment.get("enemy_style", {})
-	if background_layer != null and background_layer.has_method("set_palette_override"):
-		background_layer.call("set_palette_override", sky_palette)
-	if background_layer != null and background_layer.has_method("set_style_override"):
-		background_layer.call("set_style_override", background_style)
-	if ceiling_layer != null and ceiling_layer.has_method("set_profile_override"):
-		ceiling_layer.call("set_profile_override", ceiling_profile)
-	if terrain_layer != null and terrain_layer.has_method("set_profile_override"):
-		terrain_layer.call("set_profile_override", terrain_profile)
+	if background_layer != null:
+		background_layer.set_palette_override(sky_palette)
+		background_layer.set_style_override(background_style)
+	if ceiling_layer != null:
+		ceiling_layer.set_profile_override(ceiling_profile)
+	if terrain_layer != null:
+		terrain_layer.set_profile_override(terrain_profile)
 
 func _ceiling_height_at(screen_x: float) -> float:
-	if ceiling_layer != null and ceiling_layer.has_method("ceiling_height_at_screen_x"):
-		return float(ceiling_layer.call("ceiling_height_at_screen_x", screen_x))
+	if ceiling_layer != null:
+		return ceiling_layer.ceiling_height_at_screen_x(screen_x)
 	return 80.0
 
 func _terrain_height_at(screen_x: float) -> float:
-	if terrain_layer != null and terrain_layer.has_method("ground_height_at_screen_x"):
-		return float(terrain_layer.call("ground_height_at_screen_x", screen_x))
+	if terrain_layer != null:
+		return terrain_layer.ground_height_at_screen_x(screen_x)
 	return ENEMY_GROUND_Y
 
 func _spawn_x() -> float:
@@ -933,20 +1087,29 @@ func _on_respawned() -> void:
 	last_action_text = "Respawned"
 
 func _update_hud() -> void:
-	state_label.text = "SCR %05d    LIV %d    STG %d    %s" % [
+	var next_state_label := "SCR %05d    LIV %d    STG %d    %s" % [
 		game_state.score,
 		max(game_state.lives, 0),
 		game_state.stage_id,
 		game_state.status_text()
 	]
-	fuel_bar.value = game_state.fuel
-	fuel_value_label.text = "%05.1f%%" % game_state.fuel
-	action_label.text = "LOG  %s" % String(last_action_text)
-	_update_info_label()
-	_set_pause_ui_visibility()
-	_update_pause_menu()
-	_update_remap_panel()
-	_update_start_screen_ui()
+	if next_state_label != _last_state_label_text:
+		_last_state_label_text = next_state_label
+		state_label.text = next_state_label
+
+	if not is_equal_approx(_last_fuel_value, game_state.fuel):
+		_last_fuel_value = game_state.fuel
+		fuel_bar.value = game_state.fuel
+
+	var next_fuel_text := "%05.1f%%" % game_state.fuel
+	if next_fuel_text != _last_fuel_value_text:
+		_last_fuel_value_text = next_fuel_text
+		fuel_value_label.text = next_fuel_text
+
+	var next_action_label := "LOG  %s" % String(last_action_text)
+	if next_action_label != _last_action_label_text:
+		_last_action_label_text = next_action_label
+		action_label.text = next_action_label
 
 func _update_info_label() -> void:
 	var segment = _current_segment()
@@ -958,16 +1121,17 @@ func _update_info_label() -> void:
 		_action_binding_text("fire"),
 		_action_binding_text("bomb")
 	]
+	var next_text := base_text
 	if game_state.run_started and game_state.is_paused:
-		info_label.text = "%s    1 RESUME  2 RETRY  3 WINDOW  4 REMAP" % base_text
-	else:
-		info_label.text = base_text
+		next_text = "%s    1 RESUME  2 RETRY  3 WINDOW  4 REMAP" % base_text
+	if info_label.text != next_text:
+		info_label.text = next_text
 
 func _update_input_debug() -> void:
 	if input_label == null or not input_label.visible:
 		return
 	var pressed_actions: Array[String] = []
-	for action in ["move_up", "move_down", "move_left", "move_right", "fire", "bomb", "start", "pause", "toggle_fullscreen"]:
+	for action in INPUT_DEBUG_ACTIONS:
 		if Input.is_action_pressed(action):
 			pressed_actions.append(action)
 	var pressed_text := "none" if pressed_actions.is_empty() else ", ".join(pressed_actions)
@@ -1004,6 +1168,7 @@ func _toggle_fullscreen() -> void:
 	last_action_text = "Display mode switched to %s" % mode_label
 	action_label.text = "Last Action: %s" % last_action_text
 	_update_pause_menu()
+	_update_start_screen_ui()
 
 func _set_pause_ui_visibility() -> void:
 	var pause_visible: bool = game_state.run_started and game_state.is_paused and not _is_game_over()
@@ -1015,11 +1180,19 @@ func _update_pause_menu() -> void:
 	var mode_name := "Fullscreen"
 	if current_mode == DisplayServer.WINDOW_MODE_WINDOWED:
 		mode_name = "Windowed"
-	pause_options_label.text = "1 Resume\n2 Retry Run\n3 Toggle Window Mode (%s)\n4 Input Remap" % mode_name
+	var next_text := "1 Resume\n2 Retry Run\n3 Toggle Window Mode (%s)\n4 Input Remap" % mode_name
+	if next_text != _last_pause_options_text:
+		_last_pause_options_text = next_text
+		pause_options_label.text = next_text
 
 func _update_remap_panel() -> void:
-	remap_status_label.text = remap_status_text
-	remap_list_label.text = _remap_list_text() + "\nBackspace resets selected action."
+	if remap_status_text != _last_remap_status_label_text:
+		_last_remap_status_label_text = remap_status_text
+		remap_status_label.text = remap_status_text
+	var next_list_text := _remap_list_text() + "\nBackspace resets selected action."
+	if next_list_text != _last_remap_list_text:
+		_last_remap_list_text = next_list_text
+		remap_list_label.text = next_list_text
 
 func _selected_remap_action() -> String:
 	return REMAP_ACTIONS[clampi(remap_selected_index, 0, REMAP_ACTIONS.size() - 1)]
@@ -1059,6 +1232,8 @@ func _rebind_action(action_name: String, source_event: InputEventKey) -> void:
 	InputMap.action_add_event(action_name, rebound_event)
 	remap_status_text = "%s mapped to %s." % [_action_label(action_name), _action_binding_text(action_name)]
 	_save_input_bindings()
+	_last_info_label_key = ""
+	_update_info_label()
 
 func _reset_action_binding(action_name: String) -> void:
 	InputMap.action_erase_events(action_name)
@@ -1070,6 +1245,8 @@ func _reset_action_binding(action_name: String) -> void:
 		InputMap.action_add_event(action_name, default_event)
 	remap_status_text = "%s reset to %s." % [_action_label(action_name), _action_binding_text(action_name)]
 	_save_input_bindings()
+	_last_info_label_key = ""
+	_update_info_label()
 
 func _load_input_bindings() -> void:
 	var settings := ConfigFile.new()

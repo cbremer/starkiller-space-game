@@ -1,6 +1,8 @@
 extends SceneTree
 
 const GameStateScript := preload("res://scripts/game_state.gd")
+const MainScript := preload("res://scripts/main.gd")
+const PlayerShipScript := preload("res://scripts/player_ship.gd")
 const StageSegmentSettingsScript := preload("res://scripts/stage_segment_settings.gd")
 
 var _passes := 0
@@ -24,6 +26,7 @@ func _run_all() -> void:
 	_run_test("stage segment settings normalize palette overrides", _test_stage_segment_settings_normalize_palette_overrides)
 	_run_test("scenario: full lifecycle to game over", _scenario_full_lifecycle_to_game_over)
 	_run_test("scenario: pause freezes fuel drain and then resumes", _scenario_pause_freeze_and_resume)
+	_run_test("main loop advances respawn after crash", _test_main_loop_advances_respawn_after_crash)
 
 func _run_test(name: String, body: Callable) -> void:
 	var failures_before := _failures
@@ -208,3 +211,25 @@ func _scenario_pause_freeze_and_resume() -> void:
 	_expect_true(not state.is_paused, "pause should disable on second toggle")
 	state.drain_fuel(25.0)
 	_expect_true(state.fuel < fuel_before_pause, "fuel should drain again after unpausing")
+
+func _test_main_loop_advances_respawn_after_crash() -> void:
+	var main = MainScript.new()
+	var player = PlayerShipScript.new()
+	var hud := Control.new()
+	hud.size = Vector2(320.0, 96.0)
+	var input_debug := Label.new()
+	input_debug.visible = false
+	main.set("player", player)
+	main.set("hud", hud)
+	main.set("input_label", input_debug)
+	main.call("_ensure_fullscreen_input_action")
+	var state = main.get("game_state")
+	state.start_run()
+	state.die()
+	_expect_true(not state.is_alive, "main scene should reflect death before respawn")
+	main.call("_process", state.respawn_cooldown + 0.05)
+	_expect_true(state.is_alive, "main loop should advance respawn cooldown after a crash")
+	player.free()
+	hud.free()
+	input_debug.free()
+	main.free()
