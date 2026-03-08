@@ -182,11 +182,18 @@ h3 {
   border-radius: 999px;
   font-weight: 700;
   transition: transform 0.18s ease;
+  outline: none;
 }
 
-.button:hover,
+.button:hover {
+  transform: translateY(-2px);
+}
+
 .button:focus-visible {
   transform: translateY(-2px);
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px rgba(88, 230, 255, 0.35);
 }
 
 .button-primary {
@@ -380,7 +387,7 @@ h3 {
 
 @media (max-width: 720px) {
   .page-shell {
-    width: min(100% - 20px, 1200px);
+    width: min(1200px, calc(100% - 20px));
     padding-top: 12px;
   }
 
@@ -413,5 +420,20 @@ h3 {
 
   .section {
     padding-top: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .button {
+    transition: none;
+  }
+
+  .button:hover,
+  .button:focus-visible {
+    transform: none;
   }
 }
