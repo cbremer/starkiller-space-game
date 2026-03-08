@@ -27,6 +27,9 @@ starkiller-space-game/
 │       └── 2026-02-28-tasks-session-01-05-roadmap.md
 ├── scenes/
 ├── scripts/
+├── web/
+│   ├── index.html
+│   └── styles.css
 └── assets/
     └── concept_samples/
         ├── README.md

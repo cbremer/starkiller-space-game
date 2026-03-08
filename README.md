@@ -1,6 +1,7 @@
 # Starkiller Space Game (Godot 4 Prototype)
 
 Current prototype is a keyboard-first, Scramble-style horizontal shooter slice with stage segments, split weapon roles, and fuel pressure.
+A standalone promotional landing page now lives at `web/index.html`.
 
 ## Run
 
@@ -83,6 +84,12 @@ Run automated Session 5 smoke checks:
 4. Adjust settings if needed, then click `Reimport`.
 
 Defaults for new textures are set in `project.godot` under `[importer_defaults]`. Existing images need a manual `Reimport` to pick up changes.
+
+## Promotional Site
+
+Open `web/index.html` in a browser for a lightweight promo/landing page inspired by the project's retro-futurist art direction.
+
+The page links directly to the repository and a downloadable zip of the current `main` branch.
 
 ## Notes
 
