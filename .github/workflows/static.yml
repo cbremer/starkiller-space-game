@@ -38,6 +38,10 @@ jobs:
           rm -rf dist
           mkdir -p dist
           cp -R web/* dist/
+          # Adjust asset URLs in the compiled CSS so they resolve correctly on GitHub Pages
+          if [ -f dist/styles.css ]; then
+            sed -i 's,url("\.\./assets/,url("assets/,g' dist/styles.css
+          fi
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
