@@ -42,6 +42,8 @@ jobs:
           if [ -f dist/styles.css ]; then
             sed -i 's,url("\.\./assets/,url("assets/,g' dist/styles.css
           fi
+          mkdir -p dist/assets/concept_samples
+          cp -R assets/concept_samples/* dist/assets/concept_samples/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
