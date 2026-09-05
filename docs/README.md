@@ -25,3 +25,5 @@ Types:
 When starting a new working session:
 1. Add a new `tasks` file with the next session number/date.
 2. Update that project's `README.md` timeline table.
+
+Current game work: [roadmap recovery, cleanup, and modern mode](project-starkiller-prototype/2026-09-05-tasks-roadmap-recovery-and-modern-mode.md).

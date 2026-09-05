@@ -14,6 +14,13 @@ var is_active := true
 var _glow: Sprite2D
 var _sprite: Sprite2D
 
+var modern_style := false
+
+func set_modern_style(value: bool) -> void:
+	modern_style = value
+	if _glow != null:
+		_glow.scale = glow_scale * (1.8 if value else 1.0)
+
 func _ready() -> void:
 	add_to_group("laser_bolts")
 	_glow = Sprite2D.new()

@@ -4,12 +4,16 @@ This folder is the canonical documentation for the current Starkiller Space Game
 
 ## Current Status
 
-Session 9 is now closed. Terrain overrides and fuel tuning are merged, and Session 10 starts the next-step validation and loop polish.
+Latest: [switchable visuals cleanup and polish](2026-09-05-tasks-switchable-visuals-cleanup.md). F8 now switches looks during play; modern artwork uses imported resources.
+
+Remote includes the performance/respawn fixes. The active [roadmap recovery and modern-mode tracker](2026-09-05-tasks-roadmap-recovery-and-modern-mode.md) records the new Nova/presentation slice, cleanup work, and remaining playtest gates. The earlier Session 11 summary could not be matched to repository history.
 
 ## Timeline
 
 | Date | Type | File | Notes |
 | --- | --- | --- | --- |
+| 2026-09-05 | Tasks | [2026-09-05-tasks-switchable-visuals-cleanup.md](2026-09-05-tasks-switchable-visuals-cleanup.md) | Visual cleanup, live switching, modern polish and export validation |
+| 2026-09-05 | Tasks | [2026-09-05-tasks-roadmap-recovery-and-modern-mode.md](2026-09-05-tasks-roadmap-recovery-and-modern-mode.md) | Active roadmap, cleanup, Nova, modern prototype |
 | 2026-02-27 | Brainstorm | `2026-02-27-brainstorm-scramble-desktop-discovery.md` | Discovery and research-first plan |
 | 2026-02-28 | Spec | `2026-02-28-spec-starkiller-prototype-v1.md` | Current gameplay/tech contract |
 | 2026-02-28 | Tasks | `2026-02-28-tasks-session-01-05-roadmap.md` | Historical Session 1-5 roadmap/archive |
@@ -19,7 +23,7 @@ Session 9 is now closed. Terrain overrides and fuel tuning are merged, and Sessi
 | 2026-03-01 | Tasks | `2026-03-01-tasks-session-07-regression-hardening.md` | Session 7 closeout tracker (manual validation deferred to Session 8 kickoff) |
 | 2026-03-01 | Tasks | `2026-03-01-tasks-session-08-stage-data-and-validation-kickoff.md` | Session 8 closeout tracker (stage data wrapped; manual validation now tracked in Session 9) |
 | 2026-03-02 | Tasks | `2026-03-02-tasks-session-09-terrain-drive.md` | Session 9 tracker (manual validation + terrain polish) |
-| 2026-03-02 | Tasks | `2026-03-02-tasks-session-10-next-steps.md` | Active Session 10 tracker (validation + loop polish) |
+| 2026-03-02 | Tasks | `2026-03-02-tasks-session-10-next-steps.md` | Historical Session 10 tracker (validation + loop polish) |
 
 ## Naming Convention
 

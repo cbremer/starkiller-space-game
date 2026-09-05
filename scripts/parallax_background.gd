@@ -1,5 +1,12 @@
 extends Node2D
 
+var modern_style := false
+
+func set_modern_style(value: bool) -> void:
+	modern_style = value
+	queue_redraw()
+
+
 const SPACEPORT_SPIRES_TEXTURE := preload("res://assets/concept_samples/props/spaceport_spires.svg")
 const MONOLITH_GATE_TEXTURE := preload("res://assets/concept_samples/props/monolith_gate.svg")
 const SEGMENT_PALETTES := [
@@ -217,13 +224,20 @@ func _draw_distant_traffic(size: Vector2, palette: Dictionary) -> void:
 		draw_rect(Rect2(Vector2(x - 8, y + 1), Vector2(7, 1)), tone)
 
 func _draw_hill_band(size: Vector2, parallax: float, base_y: float, amplitude: float, color: Color) -> void:
+	var points := PackedVector2Array([Vector2(0, size.y)])
 	var step := 8.0
 	var x := 0.0
 	while x <= size.x + step:
 		var world_x := x + _scroll_distance * parallax
 		var y := base_y + sin(world_x * 0.0103) * amplitude + cos(world_x * 0.0048) * amplitude * 0.65
-		draw_line(Vector2(x, y), Vector2(x, size.y), color, step + 1.0)
+		if modern_style:
+			points.append(Vector2(x, y))
+		else:
+			draw_line(Vector2(x, y), Vector2(x, size.y), color, step + 1.0)
 		x += step
+	if modern_style:
+		points.append(Vector2(size.x + step, size.y))
+		draw_colored_polygon(points, color)
 
 func _merge_palette(base: Dictionary, override: Dictionary) -> Dictionary:
 	var merged: Dictionary = base.duplicate(true)

@@ -9,6 +9,8 @@ signal player_respawned
 const STARTING_LIVES := 3
 const MAX_FUEL := 100.0
 
+var nova_charge := 0.0
+
 var score: int = 0
 var lives: int = STARTING_LIVES
 var fuel: float = MAX_FUEL
@@ -21,6 +23,7 @@ var respawn_cooldown := 1.5
 var _respawn_remaining := 0.0
 
 func start_run() -> void:
+	nova_charge = 0.0
 	score = 0
 	lives = STARTING_LIVES
 	fuel = MAX_FUEL
@@ -40,8 +43,10 @@ func toggle_pause() -> void:
 func register_action(action_name: String) -> void:
 	action_triggered.emit(action_name)
 
-func add_score(points: int) -> void:
+func add_score(points: int, charge_nova := true) -> void:
 	score += points
+	if charge_nova and run_started and is_alive and not is_paused:
+		nova_charge = clampf(nova_charge + maxf(points, 0) * 0.1, 0.0, 100.0)
 	changed.emit()
 
 func add_fuel(amount: float) -> void:
@@ -100,3 +105,10 @@ func status_text() -> String:
 
 func _respawn_tenths_remaining() -> int:
 	return maxi(0, int(round(_respawn_remaining * 10.0)))
+
+func try_spend_nova() -> bool:
+	if not run_started or not is_alive or is_paused or nova_charge < 100.0:
+		return false
+	nova_charge = 0.0
+	changed.emit()
+	return true
