@@ -72,6 +72,7 @@ enum TrackedNodeList {
 	FUEL_TANKS
 }
 
+@onready var graphics_button: Button = $CanvasLayer/GraphicsButton
 @onready var player: Node2D = $PlayerShip
 @onready var hud: Control = $CanvasLayer/HUD
 @onready var state_label: Label = $CanvasLayer/HUD/StateLabel
@@ -161,6 +162,8 @@ func _ready() -> void:
 	modern_visuals.settings_path = visual_settings_path
 	modern_visuals.setup(self)
 	modern_visuals.style_changed.connect(_on_visual_mode_changed)
+	graphics_button.pressed.connect(_toggle_visual_mode)
+	_update_graphics_button()
 	game_state.changed.connect(_on_game_state_changed)
 	game_state.action_triggered.connect(_on_action_triggered)
 	game_state.player_died.connect(_on_player_died)
@@ -1308,6 +1311,7 @@ func _toggle_visual_mode() -> void:
 	modern_visuals.set_enabled(not modern_visuals.enabled)
 
 func _on_visual_mode_changed() -> void:
+	_update_graphics_button()
 	_update_hud()
 	_update_start_screen_ui()
 	_update_pause_menu()
@@ -1333,3 +1337,6 @@ func _try_trigger_nova() -> void:
 
 func _exit_tree() -> void:
 	_reset_sfx_pool()
+
+func _update_graphics_button() -> void:
+	graphics_button.text = "Switch to Retro" if modern_visuals.enabled else "Switch to Modern"

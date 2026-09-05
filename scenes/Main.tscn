@@ -1,7 +1,31 @@
-[gd_scene load_steps=3 format=3 uid="uid://c77wfc07q2n0e"]
+[gd_scene load_steps=5 format=3 uid="uid://c77wfc07q2n0e"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_7ooxk"]
 [ext_resource type="Script" path="res://scripts/player_ship.gd" id="2_as8vx"]
+
+[sub_resource type="StyleBoxFlat" id="StyleGraphicsNormal"]
+bg_color = Color(0.035, 0.07, 0.17, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.91, 1, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleGraphicsHover"]
+bg_color = Color(0.08, 0.24, 0.34, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.97, 1, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_7ooxk")
@@ -417,3 +441,21 @@ theme_override_font_sizes/font_size = 19
 text = "Bindings"
 autowrap_mode = 2
 theme_override_font_sizes/font_size = 20
+
+[node name="GraphicsButton" type="Button" parent="CanvasLayer"]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -302.0
+offset_top = 24.0
+offset_right = -30.0
+offset_bottom = 56.0
+grow_horizontal = 0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+text = "Switch to Modern"
+tooltip_text = "Change the look without restarting your run."
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.8, 0.96, 1, 1)
+theme_override_styles/normal = SubResource("StyleGraphicsNormal")
+theme_override_styles/hover = SubResource("StyleGraphicsHover")
+theme_override_styles/pressed = SubResource("StyleGraphicsHover")

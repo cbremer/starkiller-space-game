@@ -19,6 +19,13 @@ func _run() -> void:
 	await process_frame
 	game.set_process(false)
 	game.modern_visuals.set_enabled(false, false)
+	await click_graphics_button()
+	check(game.modern_visuals.enabled, "Mouse button switches title screen to modern")
+	check(game.graphics_button.text == "Switch to Retro", "Button label offers the other look")
+	await capture("modern-title")
+	await click_graphics_button()
+	check(not game.modern_visuals.enabled, "Mouse button switches back to retro")
+	check(game.graphics_button.focus_mode == Control.FOCUS_NONE, "Button leaves keyboard controls available")
 	game._start_run()
 	game.player.set_physics_process(false)
 	game.rng.seed = 42
@@ -155,3 +162,21 @@ func capture(label: String) -> void:
 			var folder := arg.trim_prefix("--capture-dir=")
 			DirAccess.make_dir_recursive_absolute(folder)
 			root.get_texture().get_image().save_png(folder.path_join(label + ".png"))
+
+func click_graphics_button() -> void:
+	# Headless windows do not route pointer hits; GPU runs exercise real mouse input.
+	if DisplayServer.get_name() == "headless":
+		game.graphics_button.pressed.emit()
+		await process_frame
+		return
+	var center: Vector2 = game.graphics_button.get_global_rect().get_center()
+	var motion := InputEventMouseMotion.new()
+	motion.position = center
+	root.push_input(motion)
+	for down in [true, false]:
+		var click := InputEventMouseButton.new()
+		click.position = center
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.pressed = down
+		root.push_input(click)
+		await process_frame

@@ -2,6 +2,10 @@
 
 ## Delivered
 
+- Added an always-visible top-right graphics button on title, gameplay, pause,
+  and game-over screens. Its label shows the look you can switch to. Mouse
+  clicks use the existing saved preference; keyboard focus stays with gameplay.
+
 - Extracted key definitions, validation, and InputMap helpers from main into
   `scripts/input_profile.gd`; menu/persistence coordination stays in main.
 - Replaced runtime SVG generation with eleven imported SVG actor assets and a
