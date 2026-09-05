@@ -9,13 +9,17 @@ A standalone promotional landing page now lives at `web/index.html`.
 2. Press Play (`F5`) to run `scenes/Main.tscn`.
 3. Press `Enter` to start a run.
 4. Default presentation uses a 1920x1080 gameplay viewport and window and starts in windowed mode (`F11` toggles fullscreen).
-5. From the startup `MENU`, you can change graphics (Retro / Modern), change window mode, or remap controls before starting the run.
+5. From startup `SETTINGS`, you can change graphics (Retro / Modern), change window mode, or remap controls before starting the run.
 
 ## Nova and presentation
 
 `C` activates Nova when the HUD reads **NOVA READY** (remappable in Controls). Score charges it; the burst destroys nearby enemies within 260 pixels. Nova kills do not recharge it.
 
-Retro is the default. Click the **Switch to Modern / Switch to Retro** button in the top-right corner at any time. You can also press **F8** at the title or during play to switch instantly (remappable in Controls). You can also use **Menu > Graphics** or **pause > 5**. Modern is an optional 2.5D art prototype with imported high-resolution actors, a ringed planet, atmospheric depth, shaded terrain, ship banking, and richer weapon effects. It preserves gameplay, collision sizes, and the original retro textures. The preference survives restart.
+Retro is the default. Open **Settings** on the title screen, or press **Esc** during play and choose **Settings** (5). The graphics button inside Settings switches between Retro and Modern and remembers your selection. Returning from Settings keeps the run paused until you resume.
+
+Choose **Quit Game** on the title or pause screen to exit. It is also selectable with Up/Down + Enter on the title, or **6** while paused.
+
+Modern is a 2.5D art presentation with imported high-resolution actors, a ringed planet, atmospheric depth, shaded terrain, ship banking, and richer weapon effects. Gameplay and collision sizes are shared.
 
 The latest [cleanup and validation notes](docs/project-starkiller-prototype/2026-09-05-tasks-switchable-visuals-cleanup.md) document module boundaries and exported-pack checks.
 

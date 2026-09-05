@@ -8,7 +8,6 @@ const REMAP_ACTIONS: Array[String] = [
 	"fire",
 	"bomb",
 	"ultimate",
-	"toggle_visuals",
 	"start",
 	"pause"
 ]
@@ -20,7 +19,6 @@ const ACTION_LABELS := {
 	"fire": "Fire",
 	"bomb": "Bomb",
 	"ultimate": "Nova Burst",
-	"toggle_visuals": "Switch Graphics",
 	"start": "Start / Retry",
 	"pause": "Pause / Resume"
 }
@@ -32,7 +30,6 @@ const DEFAULT_KEY_BINDINGS := {
 	"fire": KEY_Z,
 	"bomb": KEY_X,
 	"ultimate": KEY_C,
-	"toggle_visuals": KEY_F8,
 	"start": KEY_ENTER,
 	"pause": KEY_ESCAPE
 }

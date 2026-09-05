@@ -31,10 +31,7 @@ window/stretch/mode="viewport"
 
 [input]
 
-toggle_visuals={
-"deadzone": 0.5,
-"events": [Object(InputEventKey,"keycode":4194339,"physical_keycode":4194339)]
-}
+
 
 ultimate={
 "deadzone": 0.5,

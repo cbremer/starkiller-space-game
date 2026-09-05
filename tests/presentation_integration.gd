@@ -19,6 +19,9 @@ func _run() -> void:
 	await process_frame
 	game.set_process(false)
 	game.modern_visuals.set_enabled(false, false)
+	check(not game.graphics_button.is_visible_in_tree(), "Graphics switch hidden outside Settings")
+	await click_menu_button(game.settings_button)
+	check(game.graphics_settings.visible, "Settings opens from title")
 	await click_graphics_button()
 	check(game.modern_visuals.enabled, "Mouse button switches title screen to modern")
 	check(game.graphics_button.text == "Switch to Retro", "Button label offers the other look")
@@ -61,11 +64,9 @@ func _run() -> void:
 	switch_event.keycode = KEY_F8
 	switch_event.physical_keycode = KEY_F8
 	switch_event.pressed = true
-	check(switch_event.is_action_pressed("toggle_visuals"), "F8 is the graphics shortcut")
 	game._handle_key_event(switch_event)
-	check(game.modern_visuals.enabled, "Shortcut switches graphics during play")
-	game._handle_key_event(switch_event)
-	check(not game.modern_visuals.enabled, "Shortcut switches back during play")
+	check(not game.modern_visuals.enabled, "F8 no longer switches graphics during play")
+	check(not game.menu_buttons.visible and not game.graphics_settings.visible, "Gameplay has no menu overlay")
 	for _iteration in range(20):
 		game.modern_visuals.set_enabled(true, false)
 		game.modern_visuals.set_enabled(false, false)
@@ -120,7 +121,11 @@ func _run() -> void:
 	event.keycode = KEY_5
 	event.pressed = true
 	game._handle_key_event(event)
-	check(game.modern_visuals.enabled, "Pause graphics menu toggles mode")
+	check(game.is_pause_settings_open, "Pause option opens Settings")
+	await click_graphics_button()
+	check(game.modern_visuals.enabled, "Settings button changes mode while paused")
+	await click_menu_button(game.settings_back)
+	check(not game.graphics_settings.visible, "Back closes Settings")
 	check(game.game_state.is_paused, "Graphics menu preserves pause")
 	var cfg := ConfigFile.new()
 	check(cfg.load(game.modern_visuals.settings_path) == OK, "Mode saved")
@@ -164,12 +169,15 @@ func capture(label: String) -> void:
 			root.get_texture().get_image().save_png(folder.path_join(label + ".png"))
 
 func click_graphics_button() -> void:
+	await click_menu_button(game.graphics_button)
+
+func click_menu_button(button: Button) -> void:
 	# Headless windows do not route pointer hits; GPU runs exercise real mouse input.
 	if DisplayServer.get_name() == "headless":
-		game.graphics_button.pressed.emit()
+		button.pressed.emit()
 		await process_frame
 		return
-	var center: Vector2 = game.graphics_button.get_global_rect().get_center()
+	var center: Vector2 = button.get_global_rect().get_center()
 	var motion := InputEventMouseMotion.new()
 	motion.position = center
 	root.push_input(motion)

@@ -56,7 +56,6 @@ const INPUT_DEBUG_ACTIONS: Array[String] = [
 	"fire",
 	"bomb",
 	"ultimate",
-	"toggle_visuals",
 	"start",
 	"pause",
 	"toggle_fullscreen"
@@ -72,7 +71,12 @@ enum TrackedNodeList {
 	FUEL_TANKS
 }
 
-@onready var graphics_button: Button = $CanvasLayer/GraphicsButton
+@onready var graphics_button: Button = $CanvasLayer/GraphicsSettings/VBox/GraphicsButton
+@onready var graphics_settings: PanelContainer = $CanvasLayer/GraphicsSettings
+@onready var menu_buttons: VBoxContainer = $CanvasLayer/MenuButtons
+@onready var settings_button: Button = $CanvasLayer/MenuButtons/SettingsButton
+@onready var quit_button: Button = $CanvasLayer/MenuButtons/QuitButton
+@onready var settings_back: Button = $CanvasLayer/GraphicsSettings/VBox/BackButton
 @onready var player: Node2D = $PlayerShip
 @onready var hud: Control = $CanvasLayer/HUD
 @onready var state_label: Label = $CanvasLayer/HUD/StateLabel
@@ -99,6 +103,7 @@ enum TrackedNodeList {
 @onready var stage_banner: Label = $CanvasLayer/StageBanner
 
 var visual_settings_path := "user://visual_settings.cfg"
+var is_pause_settings_open := false
 var modern_visuals = null
 
 var game_state = GAME_STATE_SCRIPT.new()
@@ -163,6 +168,9 @@ func _ready() -> void:
 	modern_visuals.setup(self)
 	modern_visuals.style_changed.connect(_on_visual_mode_changed)
 	graphics_button.pressed.connect(_toggle_visual_mode)
+	settings_button.pressed.connect(_open_settings)
+	quit_button.pressed.connect(_quit_game)
+	settings_back.pressed.connect(_close_settings)
 	_update_graphics_button()
 	game_state.changed.connect(_on_game_state_changed)
 	game_state.action_triggered.connect(_on_action_triggered)
@@ -294,8 +302,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	_handle_key_event(key_event)
 
 func _handle_key_event(event: InputEventKey) -> void:
-	if not awaiting_rebind and not is_remap_menu_open and not is_start_controls_open and event.is_action_pressed("toggle_visuals"):
-		_toggle_visual_mode()
+	if is_pause_settings_open:
+		if event.keycode in [KEY_ESCAPE, KEY_BACKSPACE]:
+			_close_settings()
+			_suppress_pause_this_frame = event.is_action_pressed("pause")
+		elif event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
+			_toggle_visual_mode()
 		_consume_input_event()
 		return
 	if _is_title_overlay_visible():
@@ -333,8 +345,11 @@ func _handle_key_event(event: InputEventKey) -> void:
 			_consume_input_event()
 		KEY_5:
 			if not is_remap_menu_open:
-				_toggle_visual_mode()
+				_open_settings()
 				_consume_input_event()
+		KEY_6:
+			if not is_remap_menu_open:
+				_quit_game()
 		KEY_4:
 			is_remap_menu_open = not is_remap_menu_open
 			awaiting_rebind = false
@@ -430,7 +445,7 @@ func _handle_start_screen_key_event(event: InputEventKey) -> void:
 
 	match event.keycode:
 		KEY_UP, KEY_DOWN:
-			start_menu_selected_index = 1 - start_menu_selected_index
+			start_menu_selected_index = wrapi(start_menu_selected_index + (-1 if event.keycode == KEY_UP else 1), 0, 3)
 			_update_start_screen_ui()
 			_consume_input_event()
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
@@ -439,6 +454,8 @@ func _handle_start_screen_key_event(event: InputEventKey) -> void:
 				_start_run()
 				last_action_text = "Run restarted from game over" if from_game_over else "Run started from title screen"
 				action_label.text = "Last Action: %s" % last_action_text
+			elif start_menu_selected_index == 2:
+				_quit_game()
 			else:
 				is_start_menu_details_open = true
 				start_submenu_selected_index = 0
@@ -472,6 +489,7 @@ func _update_start_screen_ui() -> void:
 	if start_screen == null:
 		return
 
+	_refresh_navigation_ui()
 	var show_title_overlay := _is_title_overlay_visible()
 	start_screen.visible = show_title_overlay
 	hud.visible = not show_title_overlay
@@ -495,7 +513,7 @@ func _update_start_screen_ui() -> void:
 		return
 
 	if is_start_menu_details_open:
-		start_prompt_label.text = "MENU" if not is_game_over_overlay else "GAME OVER MENU"
+		start_prompt_label.text = "SETTINGS"
 		var run_label := "RETRY RUN" if is_game_over_overlay else "START RUN"
 		var mode_label := "Fullscreen"
 		if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_WINDOWED:
@@ -515,19 +533,22 @@ func _update_start_screen_ui() -> void:
 	var start_marker := ">" if start_menu_selected_index == 0 else " "
 	var menu_marker := ">" if start_menu_selected_index == 1 else " "
 	var start_label := "RETRY RUN" if is_game_over_overlay else "START RUN"
-	start_options_label.text = "%s %s\n%s MENU" % [start_marker, start_label, menu_marker]
-	start_hint_label.text = "Up/Down · Enter · %s switches graphics (%s)" % [_action_binding_text("toggle_visuals"), _visual_mode_label()]
+	var quit_marker := ">" if start_menu_selected_index == 2 else " "
+	start_options_label.text = "%s %s\n%s SETTINGS\n%s QUIT GAME" % [start_marker, start_label, menu_marker, quit_marker]
+	start_hint_label.text = "Up/Down to choose · Enter to confirm"
 
 func _process(delta: float) -> void:
 	_sync_player_playfield_bounds()
 
 	if Input.is_action_just_pressed("start"):
-		if game_state.run_started and game_state.is_paused and not is_remap_menu_open and not awaiting_rebind:
+		if game_state.run_started and game_state.is_paused and not is_remap_menu_open and not awaiting_rebind and not is_pause_settings_open:
 			_start_run()
 
 	if Input.is_action_just_pressed("pause"):
 		if _suppress_pause_this_frame:
 			_suppress_pause_this_frame = false
+		elif is_pause_settings_open:
+			_close_settings()
 		elif awaiting_rebind:
 			awaiting_rebind = false
 			remap_status_text = "Rebind canceled."
@@ -585,6 +606,7 @@ func _process(delta: float) -> void:
 	_update_screen_shake(delta)
 
 func _start_run() -> void:
+	is_pause_settings_open = false
 	game_state.start_run()
 	player.position = Vector2(120, 320)
 	position = Vector2.ZERO
@@ -1092,7 +1114,7 @@ func _on_respawned() -> void:
 	last_action_text = "Respawned"
 
 func _update_hud() -> void:
-	status_title.text = "%s · %s" % [game_state.status_text().to_upper(), _visual_mode_label()]
+	status_title.text = game_state.status_text().to_upper()
 	nova_label.text = "NOVA READY" if game_state.nova_charge >= 100.0 else "NOVA %d%%" % int(game_state.nova_charge)
 	var next_state_label := "SCR %05d   LIV %d   STG %d" % [
 		game_state.score,
@@ -1130,7 +1152,7 @@ func _update_info_label() -> void:
 	base_text += "    %s NOVA" % _action_binding_text("ultimate")
 	var next_text := base_text
 	if game_state.run_started and game_state.is_paused:
-		next_text = "%s    1 RESUME  2 RETRY  3 WINDOW  4 REMAP  5 GRAPHICS" % base_text
+		next_text = "%s    1 RESUME  2 RETRY  3 WINDOW  4 REMAP  5 SETTINGS  6 QUIT" % base_text
 	if info_label.text != next_text:
 		info_label.text = next_text
 
@@ -1179,7 +1201,8 @@ func _toggle_fullscreen() -> void:
 
 func _set_pause_ui_visibility() -> void:
 	var pause_visible: bool = game_state.run_started and game_state.is_paused and not _is_game_over()
-	pause_menu.visible = pause_visible
+	pause_menu.visible = pause_visible and not is_pause_settings_open
+	_refresh_navigation_ui()
 	remap_panel.visible = pause_visible and is_remap_menu_open
 
 func _update_pause_menu() -> void:
@@ -1187,7 +1210,7 @@ func _update_pause_menu() -> void:
 	var mode_name := "Fullscreen"
 	if current_mode == DisplayServer.WINDOW_MODE_WINDOWED:
 		mode_name = "Windowed"
-	var next_text := "1 Resume\n2 Retry Run\n3 Toggle Window Mode (%s)\n4 Input Remap\n5 Graphics: %s" % [mode_name, _visual_mode_label()]
+	var next_text := "1 Resume\n2 Retry Run\n3 Toggle Window Mode (%s)\n4 Input Remap\n5 Settings\n6 Quit Game" % mode_name
 	if next_text != _last_pause_options_text:
 		_last_pause_options_text = next_text
 		pause_options_label.text = next_text
@@ -1308,6 +1331,8 @@ func _visual_mode_label() -> String:
 	return "MODERN" if modern_visuals != null and modern_visuals.enabled else "RETRO"
 
 func _toggle_visual_mode() -> void:
+	if not graphics_settings.visible:
+		return
 	modern_visuals.set_enabled(not modern_visuals.enabled)
 
 func _on_visual_mode_changed() -> void:
@@ -1340,3 +1365,26 @@ func _exit_tree() -> void:
 
 func _update_graphics_button() -> void:
 	graphics_button.text = "Switch to Retro" if modern_visuals.enabled else "Switch to Modern"
+
+func _refresh_navigation_ui() -> void:
+	var title_settings := is_start_menu_details_open and not is_start_controls_open and _is_title_overlay_visible()
+	graphics_settings.visible = title_settings or is_pause_settings_open
+	menu_buttons.visible = (_is_title_overlay_visible() or game_state.is_paused) and not graphics_settings.visible and not is_start_controls_open and not is_remap_menu_open
+
+func _open_settings() -> void:
+	if _is_title_overlay_visible():
+		is_start_menu_details_open = true
+		start_submenu_selected_index = 3
+	elif game_state.is_paused:
+		is_pause_settings_open = true
+	_update_start_screen_ui()
+	_set_pause_ui_visibility()
+
+func _close_settings() -> void:
+	is_start_menu_details_open = false
+	is_pause_settings_open = false
+	_update_start_screen_ui()
+	_set_pause_ui_visibility()
+
+func _quit_game() -> void:
+	get_tree().quit()

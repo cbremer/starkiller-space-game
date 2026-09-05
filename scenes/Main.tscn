@@ -442,20 +442,63 @@ text = "Bindings"
 autowrap_mode = 2
 theme_override_font_sizes/font_size = 20
 
-[node name="GraphicsButton" type="Button" parent="CanvasLayer"]
+[node name="MenuButtons" type="VBoxContainer" parent="CanvasLayer"]
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -302.0
 offset_top = 24.0
 offset_right = -30.0
-offset_bottom = 56.0
-grow_horizontal = 0
+offset_bottom = 124.0
+theme_override_constants/separation = 12
+
+[node name="SettingsButton" type="Button" parent="CanvasLayer/MenuButtons"]
+custom_minimum_size = Vector2(0, 44)
 focus_mode = 0
-mouse_default_cursor_shape = 2
+text = "Settings"
+theme_override_font_sizes/font_size = 22
+
+[node name="QuitButton" type="Button" parent="CanvasLayer/MenuButtons"]
+custom_minimum_size = Vector2(0, 44)
+focus_mode = 0
+text = "Quit Game"
+theme_override_font_sizes/font_size = 22
+
+[node name="GraphicsSettings" type="PanelContainer" parent="CanvasLayer"]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -145.0
+offset_right = 260.0
+offset_bottom = 145.0
+theme_override_styles/panel = SubResource("StyleGraphicsNormal")
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/GraphicsSettings"]
+theme_override_constants/separation = 22
+
+[node name="Title" type="Label" parent="CanvasLayer/GraphicsSettings/VBox"]
+text = "GRAPHICS SETTINGS"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 30
+
+[node name="GraphicsButton" type="Button" parent="CanvasLayer/GraphicsSettings/VBox"]
+custom_minimum_size = Vector2(0, 56)
+focus_mode = 0
 text = "Switch to Modern"
-tooltip_text = "Change the look without restarting your run."
-theme_override_font_sizes/font_size = 18
-theme_override_colors/font_color = Color(0.8, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleGraphicsNormal")
 theme_override_styles/hover = SubResource("StyleGraphicsHover")
 theme_override_styles/pressed = SubResource("StyleGraphicsHover")
+
+[node name="BackButton" type="Button" parent="CanvasLayer/GraphicsSettings/VBox"]
+custom_minimum_size = Vector2(0, 44)
+focus_mode = 0
+text = "Back"
+theme_override_font_sizes/font_size = 22
+
+[node name="Hint" type="Label" parent="CanvasLayer/GraphicsSettings/VBox"]
+text = "Your graphics preference is saved."
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18

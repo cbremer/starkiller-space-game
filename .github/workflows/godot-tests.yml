@@ -39,3 +39,9 @@ jobs:
       - name: Validate packaged resources
         working-directory: /tmp
         run: godot --headless --main-pack /tmp/starkiller-validation.pck --script res://tests/presentation_integration.gd
+
+      - name: Verify title quit button
+        run: godot --headless --path . --script res://tests/quit_button.gd
+
+      - name: Verify pause quit button
+        run: godot --headless --path . --script res://tests/quit_button.gd -- --paused

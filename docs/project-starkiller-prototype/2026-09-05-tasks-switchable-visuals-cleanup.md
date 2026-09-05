@@ -1,5 +1,13 @@
 # Switchable visuals: cleanup and modern polish
 
+## Current menu behavior
+
+Graphics switching is now restricted to Settings, reachable from title or pause.
+The floating graphics button and F8 binding have been removed. Quit Game buttons
+are available on title/game-over and pause screens; keyboard alternatives are
+title selection with Enter and pause option 6. Back from Settings preserves pause.
+This supersedes the earlier shortcut/button placement described below.
+
 ## Delivered
 
 - Added an always-visible top-right graphics button on title, gameplay, pause,
