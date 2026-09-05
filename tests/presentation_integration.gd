@@ -13,10 +13,11 @@ func check(condition: bool, message: String) -> void:
 
 func _run() -> void:
 	game = load("res://scenes/Main.tscn").instantiate()
+	game.visual_settings_path = OS.get_cache_dir().path_join("starkiller-visual-test-%d.cfg" % OS.get_process_id())
+	game.input_bindings_settings_path = game.visual_settings_path + ".input"
 	root.add_child(game)
 	await process_frame
 	game.set_process(false)
-	game.modern_visuals.settings_path = OS.get_cache_dir().path_join("starkiller-visual-test-%d.cfg" % OS.get_process_id())
 	game.modern_visuals.set_enabled(false, false)
 	game._start_run()
 	game.player.set_physics_process(false)
@@ -37,8 +38,7 @@ func _run() -> void:
 	game.modern_visuals.set_enabled(true, false)
 	await process_frame
 	check(game.player._sprite.texture != original, "Modern replaces ship texture")
-	check(game.player._sprite.texture.get_size() == original.get_size(), "Logical sprite size preserved")
-	check(game.player._sprite.scale == original_scale, "Sprite scale preserved")
+	check(game.player._sprite.texture.get_size() * game.player._sprite.scale == original.get_size() * original_scale, "Rendered sprite dimensions preserved")
 	check(before == [game.game_state.fuel, game.game_state.score, game.game_state.lives, game.run_distance, game.rng.state, game.player.position], "Switch preserves gameplay and RNG")
 	check(game._terrain_height_at(500.0) == terrain_height, "Terrain collision remains identical")
 	await capture("modern")
@@ -50,6 +50,46 @@ func _run() -> void:
 	game.modern_visuals.set_enabled(false, false)
 	check(game.player._sprite.texture == original, "Retro texture restored exactly")
 	check(game.player._sprite.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST, "Retro filter restored")
+	var switch_event := InputEventKey.new()
+	switch_event.keycode = KEY_F8
+	switch_event.physical_keycode = KEY_F8
+	switch_event.pressed = true
+	check(switch_event.is_action_pressed("toggle_visuals"), "F8 is the graphics shortcut")
+	game._handle_key_event(switch_event)
+	check(game.modern_visuals.enabled, "Shortcut switches graphics during play")
+	game._handle_key_event(switch_event)
+	check(not game.modern_visuals.enabled, "Shortcut switches back during play")
+	for _iteration in range(20):
+		game.modern_visuals.set_enabled(true, false)
+		game.modern_visuals.set_enabled(false, false)
+	check(game.player._sprite.scale == original_scale, "Repeated switches do not accumulate scale")
+	check(game.player._sprite.rotation == 0.0, "Retro restores unbanked ship")
+	check(not game.terrain_layer.modern_style, "Retro restores terrain rendering")
+	check(not game.modern_visuals.is_processing(), "Retro disables modern environment updates")
+	for original_texture in game.modern_visuals.replacements:
+		var specimen := Sprite2D.new()
+		specimen.texture = original_texture
+		specimen.scale = Vector2(1.2, 0.8)
+		specimen.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		game.add_child(specimen)
+		game.modern_visuals.set_enabled(true, false)
+		check(specimen.texture.get_size() * specimen.scale == original_texture.get_size() * Vector2(1.2, 0.8), "All actor variants preserve rendered bounds")
+		game.modern_visuals.set_enabled(false, false)
+		check(specimen.texture == original_texture and specimen.scale == Vector2(1.2, 0.8), "All actor variants restore exactly")
+		specimen.queue_free()
+	for sector in range(game.stage_segments.size()):
+		game.current_segment_index = sector
+		game._apply_segment_visuals()
+		var profile := []
+		for x in [120.0, 500.0, 1000.0, 1800.0]:
+			profile.append(Vector2(game._terrain_height_at(x), game._ceiling_height_at(x)))
+		game.modern_visuals.set_enabled(true, false)
+		for index in range(profile.size()):
+			var x: float = [120.0, 500.0, 1000.0, 1800.0][index]
+			check(profile[index] == Vector2(game._terrain_height_at(x), game._ceiling_height_at(x)), "Every biome preserves ceiling and terrain collision")
+		game.modern_visuals.set_enabled(false, false)
+	game.current_segment_index = 0
+	game._apply_segment_visuals()
 	game.game_state.add_score(1000)
 	var near_enemy = game.ENEMY_TARGET_SCRIPT.new()
 	near_enemy.position = game.player.position + Vector2(80, 0)
@@ -78,6 +118,12 @@ func _run() -> void:
 	var cfg := ConfigFile.new()
 	check(cfg.load(game.modern_visuals.settings_path) == OK, "Mode saved")
 	check(cfg.get_value("visuals", "mode", "") == "modern", "Saved mode correct")
+	var reloaded = load("res://scenes/Main.tscn").instantiate()
+	reloaded.visual_settings_path = game.visual_settings_path
+	reloaded.input_bindings_settings_path = game.input_bindings_settings_path
+	root.add_child(reloaded)
+	check(reloaded.modern_visuals.enabled, "Modern preference restores in a fresh game scene")
+	reloaded.queue_free()
 	game.is_remap_menu_open = true
 	game._handle_key_event(event)
 	check(game.modern_visuals.enabled, "Graphics shortcut does not interrupt remap menu")
@@ -97,6 +143,8 @@ func _run() -> void:
 	DirAccess.remove_absolute(game.modern_visuals.settings_path)
 	game.queue_free()
 	await process_frame
+	# Allow the audio mixer to release stopped playback references before shutdown.
+	await create_timer(0.1).timeout
 	print("Presentation integration: %d failures" % failures)
 	quit(0 if failures == 0 else 1)
 

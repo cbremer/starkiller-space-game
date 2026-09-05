@@ -32,3 +32,10 @@ jobs:
 
       - name: Run presentation integration
         run: godot --headless --path . --script res://tests/presentation_integration.gd
+
+      - name: Export validation pack
+        run: godot --headless --path . --export-pack 'Validation Pack' /tmp/starkiller-validation.pck
+
+      - name: Validate packaged resources
+        working-directory: /tmp
+        run: godot --headless --main-pack /tmp/starkiller-validation.pck --script res://tests/presentation_integration.gd

@@ -1,5 +1,6 @@
 shader_type canvas_item;
 render_mode unshaded;
+uniform float aspect = 1.7778;
 uniform float travel = 0.0;
 uniform float sector = 0.0;
 void fragment() {
@@ -8,10 +9,13 @@ void fragment() {
 	sky += vec3(0.09, 0.035, 0.10) * sin(sector * 1.7);
 	float haze = exp(-pow((uv.y - 0.67) * 5.0, 2.0));
 	sky += vec3(0.13, 0.17, 0.20) * haze;
-	vec2 p = (uv - vec2(0.76, 0.36)) * vec2(1.7778, 1.0) / 0.235;
+	vec2 p = (uv - vec2(0.76, 0.36)) * vec2(aspect, 1.0) / 0.235;
 	float r = length(p);
 	float atmosphere = exp(-abs(r - 1.0) * 24.0);
 	sky += vec3(0.20, 0.45, 0.62) * atmosphere * 0.45;
+	float ring_radius = length(p * vec2(0.70, 2.5));
+	float rings = smoothstep(1.1, 1.15, ring_radius) * (1.0 - smoothstep(1.65, 1.7, ring_radius));
+	sky += rings * vec3(0.20, 0.25, 0.29) * (0.7 + 0.3 * sin(ring_radius * 180.0));
 	if (r < 1.0) {
 		vec3 normal = vec3(p, sqrt(1.0 - r*r));
 		float light = max(dot(normal, normalize(vec3(-0.65, -0.5, 0.7))), 0.0);

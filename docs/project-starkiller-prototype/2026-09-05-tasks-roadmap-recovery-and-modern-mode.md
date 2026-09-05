@@ -68,3 +68,5 @@ Outstanding: a human full-run feel test, low-end hardware frame-time profiling,
 complete exported-build validation, and reconciliation of the original local
 uncommitted edits with the now-merged performance changes. Automated checks do
 not establish gameplay feel or a performance guarantee.
+
+Follow-up completed: [switchable visuals cleanup and polish](2026-09-05-tasks-switchable-visuals-cleanup.md). This supersedes the initial runtime artwork prototype and adds pack validation.

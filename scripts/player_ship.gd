@@ -15,6 +15,13 @@ var input_vector := Vector2.ZERO
 var _engine_bloom: Sprite2D
 var _sprite: Sprite2D
 
+var modern_style := false
+
+func set_modern_style(value: bool) -> void:
+	modern_style = value
+	if _sprite != null and not value:
+		_sprite.rotation = 0.0
+
 func _ready() -> void:
 	_engine_bloom = Sprite2D.new()
 	_engine_bloom.texture = ENGINE_BLOOM_TEXTURE
@@ -47,6 +54,8 @@ func _physics_process(delta: float) -> void:
 		clampf(position.x, min_x, max_x),
 		clampf(position.y, min_y, max_y)
 	)
+	if modern_style:
+		_sprite.rotation = lerp_angle(_sprite.rotation, input_vector.y * 0.18, clampf(delta * 8.0, 0.0, 1.0))
 	_update_engine_bloom(delta)
 
 func _update_engine_bloom(delta: float) -> void:
@@ -56,5 +65,8 @@ func _update_engine_bloom(delta: float) -> void:
 	var pulse := 0.92 + 0.08 * sin(Time.get_ticks_msec() / 90.0)
 	var target_alpha := 0.10 + thrust * 0.12
 	var target_scale := Vector2(0.054 + thrust * 0.012, 0.040 + thrust * 0.010) * pulse
+	if modern_style:
+		target_scale *= 1.5
+		target_alpha *= 1.8
 	_engine_bloom.modulate.a = move_toward(_engine_bloom.modulate.a, target_alpha, delta * 2.8)
 	_engine_bloom.scale = _engine_bloom.scale.lerp(target_scale, clampf(delta * 8.0, 0.0, 1.0))

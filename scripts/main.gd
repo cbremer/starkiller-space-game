@@ -41,39 +41,10 @@ const STARTUP_SHIP_PATH := "res://assets/ui/startup/starkiller_ship.png"
 const BOMB_GROUND_BLAST_RADIUS := 92.0
 const MAJOR_SHAKE_STRENGTH := 8.0
 const MINOR_SHAKE_STRENGTH := 4.0
-const REMAP_ACTIONS: Array[String] = [
-	"move_up",
-	"move_down",
-	"move_left",
-	"move_right",
-	"fire",
-	"bomb",
-	"ultimate",
-	"start",
-	"pause"
-]
-const ACTION_LABELS := {
-	"move_up": "Move Up",
-	"move_down": "Move Down",
-	"move_left": "Move Left",
-	"move_right": "Move Right",
-	"fire": "Fire",
-	"bomb": "Bomb",
-	"ultimate": "Nova Burst",
-	"start": "Start / Retry",
-	"pause": "Pause / Resume"
-}
-const DEFAULT_KEY_BINDINGS := {
-	"move_up": KEY_UP,
-	"move_down": KEY_DOWN,
-	"move_left": KEY_LEFT,
-	"move_right": KEY_RIGHT,
-	"fire": KEY_Z,
-	"bomb": KEY_X,
-	"ultimate": KEY_C,
-	"start": KEY_ENTER,
-	"pause": KEY_ESCAPE
-}
+const INPUT_PROFILE := preload("res://scripts/input_profile.gd")
+const REMAP_ACTIONS = INPUT_PROFILE.REMAP_ACTIONS
+const ACTION_LABELS = INPUT_PROFILE.ACTION_LABELS
+const DEFAULT_KEY_BINDINGS = INPUT_PROFILE.DEFAULT_KEY_BINDINGS
 var input_bindings_settings_path := "user://settings.cfg"
 const INPUT_BINDINGS_SECTION := "input_bindings"
 const START_SUBMENU_OPTIONS := ["start", "controls", "window_mode", "visual_mode", "back"]
@@ -85,6 +56,7 @@ const INPUT_DEBUG_ACTIONS: Array[String] = [
 	"fire",
 	"bomb",
 	"ultimate",
+	"toggle_visuals",
 	"start",
 	"pause",
 	"toggle_fullscreen"
@@ -125,6 +97,7 @@ enum TrackedNodeList {
 @onready var remap_list_label: Label = $CanvasLayer/RemapPanel/VBox/RemapList
 @onready var stage_banner: Label = $CanvasLayer/StageBanner
 
+var visual_settings_path := "user://visual_settings.cfg"
 var modern_visuals = null
 
 var game_state = GAME_STATE_SCRIPT.new()
@@ -185,7 +158,9 @@ func _ready() -> void:
 	_load_input_bindings()
 	modern_visuals = MODERN_VISUALS_SCRIPT.new()
 	add_child(modern_visuals)
+	modern_visuals.settings_path = visual_settings_path
 	modern_visuals.setup(self)
+	modern_visuals.style_changed.connect(_on_visual_mode_changed)
 	game_state.changed.connect(_on_game_state_changed)
 	game_state.action_triggered.connect(_on_action_triggered)
 	game_state.player_died.connect(_on_player_died)
@@ -316,6 +291,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	_handle_key_event(key_event)
 
 func _handle_key_event(event: InputEventKey) -> void:
+	if not awaiting_rebind and not is_remap_menu_open and not is_start_controls_open and event.is_action_pressed("toggle_visuals"):
+		_toggle_visual_mode()
+		_consume_input_event()
+		return
 	if _is_title_overlay_visible():
 		_handle_start_screen_key_event(event)
 		return
@@ -534,7 +513,7 @@ func _update_start_screen_ui() -> void:
 	var menu_marker := ">" if start_menu_selected_index == 1 else " "
 	var start_label := "RETRY RUN" if is_game_over_overlay else "START RUN"
 	start_options_label.text = "%s %s\n%s MENU" % [start_marker, start_label, menu_marker]
-	start_hint_label.text = "Use Up/Down, Enter to confirm."
+	start_hint_label.text = "Up/Down · Enter · %s switches graphics (%s)" % [_action_binding_text("toggle_visuals"), _visual_mode_label()]
 
 func _process(delta: float) -> void:
 	_sync_player_playfield_bounds()
@@ -1110,7 +1089,7 @@ func _on_respawned() -> void:
 	last_action_text = "Respawned"
 
 func _update_hud() -> void:
-	status_title.text = game_state.status_text().to_upper()
+	status_title.text = "%s · %s" % [game_state.status_text().to_upper(), _visual_mode_label()]
 	nova_label.text = "NOVA READY" if game_state.nova_charge >= 100.0 else "NOVA %d%%" % int(game_state.nova_charge)
 	var next_state_label := "SCR %05d   LIV %d   STG %d" % [
 		game_state.score,
@@ -1302,97 +1281,34 @@ func _save_input_bindings() -> void:
 		remap_status_text = "Failed to save bindings (error %d)." % save_error
 
 func _primary_action_keycode(action_name: String) -> int:
-	for action_event in InputMap.action_get_events(action_name):
-		var key_event := action_event as InputEventKey
-		if key_event == null:
-			continue
-		var keycode := _event_keycode(key_event)
-		if _is_supported_binding_keycode(keycode):
-			return keycode
-	return int(DEFAULT_KEY_BINDINGS.get(action_name, 0))
+	return INPUT_PROFILE._primary_action_keycode(action_name)
 
 func _set_single_key_binding(action_name: String, keycode: int) -> void:
-	var safe_keycode := int(keycode)
-	if not _is_supported_binding_keycode(safe_keycode):
-		return
-	InputMap.action_erase_events(action_name)
-	var key_event := InputEventKey.new()
-	key_event.keycode = safe_keycode
-	key_event.physical_keycode = safe_keycode
-	InputMap.action_add_event(action_name, key_event)
+	INPUT_PROFILE._set_single_key_binding(action_name, keycode)
 
 func _ensure_safe_remap_bindings() -> void:
-	for action_name in REMAP_ACTIONS:
-		var has_valid_binding := false
-		for action_event in InputMap.action_get_events(action_name):
-			var key_event := action_event as InputEventKey
-			if key_event == null:
-				continue
-			if _is_supported_binding_keycode(_event_keycode(key_event)):
-				has_valid_binding = true
-				break
-		if has_valid_binding:
-			continue
-		var default_keycode := int(DEFAULT_KEY_BINDINGS.get(action_name, 0))
-		_set_single_key_binding(action_name, default_keycode)
+	INPUT_PROFILE._ensure_safe_remap_bindings()
 
 func _is_supported_binding_keycode(keycode: int) -> bool:
-	if keycode <= 0:
-		return false
-	match keycode:
-		KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE, KEY_TAB, KEY_BACKSPACE, KEY_SPACE:
-			return true
-	if keycode >= KEY_F1 and keycode <= KEY_F12:
-		return true
-	if keycode >= KEY_A and keycode <= KEY_Z:
-		return true
-	if keycode >= KEY_0 and keycode <= KEY_9:
-		return true
-	return false
+	return INPUT_PROFILE._is_supported_binding_keycode(keycode)
 
 func _consume_input_event() -> void:
 	get_viewport().set_input_as_handled()
 
 func _event_keycode(key_event: InputEventKey) -> int:
-	if key_event.keycode != 0:
-		return key_event.keycode
-	return key_event.physical_keycode
+	return INPUT_PROFILE._event_keycode(key_event)
 
 func _keycode_label(keycode: int) -> String:
-	match keycode:
-		KEY_UP:
-			return "Up"
-		KEY_DOWN:
-			return "Down"
-		KEY_LEFT:
-			return "Left"
-		KEY_RIGHT:
-			return "Right"
-		KEY_ENTER, KEY_KP_ENTER:
-			return "Enter"
-		KEY_ESCAPE:
-			return "Esc"
-		KEY_TAB:
-			return "Tab"
-		KEY_BACKSPACE:
-			return "Backspace"
-		KEY_SPACE:
-			return "Space"
-		KEY_F11:
-			return "F11"
-	if keycode >= KEY_F1 and keycode <= KEY_F12:
-		return "F%d" % int(keycode - KEY_F1 + 1)
-	if keycode >= KEY_A and keycode <= KEY_Z:
-		return char(keycode)
-	if keycode >= KEY_0 and keycode <= KEY_9:
-		return char(keycode)
-	return "Key %d" % keycode
+	return INPUT_PROFILE._keycode_label(keycode)
 
 func _visual_mode_label() -> String:
 	return "MODERN" if modern_visuals != null and modern_visuals.enabled else "RETRO"
 
 func _toggle_visual_mode() -> void:
 	modern_visuals.set_enabled(not modern_visuals.enabled)
+
+func _on_visual_mode_changed() -> void:
+	_update_hud()
 	_update_start_screen_ui()
 	_update_pause_menu()
 
@@ -1414,3 +1330,6 @@ func _try_trigger_nova() -> void:
 	_spawn_impact_flash(player.position, NOVA_RADIUS, Color(0.4, 0.85, 1.0, 0.55))
 	_play_sfx("impact", -5.8, 0.05)
 	game_state.register_action("Nova Burst (%d targets)" % kills)
+
+func _exit_tree() -> void:
+	_reset_sfx_pool()

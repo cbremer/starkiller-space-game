@@ -12,6 +12,12 @@ var _age := 0.0
 var _particles: Array[Dictionary] = []
 var _rng := RandomNumberGenerator.new()
 
+var modern_style := false
+
+func set_modern_style(value: bool) -> void:
+	modern_style = value
+	queue_redraw()
+
 func _ready() -> void:
 	add_to_group("combat_vfx")
 	_rng.randomize()
@@ -50,4 +56,10 @@ func _draw() -> void:
 		var particle_radius: float = particle["radius"]
 		var particle_color: Color = particle["color"]
 		particle_color.a *= fade
-		draw_circle(particle_position, particle_radius, particle_color)
+		if modern_style:
+			var tail: Vector2 = particle_position - Vector2(particle["velocity"]) * 0.045
+			draw_line(tail, particle_position, particle_color, particle_radius, true)
+			var halo := particle_color
+			halo.a *= 0.16
+			draw_circle(particle_position, particle_radius * 3.0, halo, true, -1.0, true)
+		draw_circle(particle_position, particle_radius, particle_color, true, -1.0, modern_style)

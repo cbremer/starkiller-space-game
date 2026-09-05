@@ -15,7 +15,9 @@ A standalone promotional landing page now lives at `web/index.html`.
 
 `C` activates Nova when the HUD reads **NOVA READY** (remappable in Controls). Score charges it; the burst destroys nearby enemies within 260 pixels. Nova kills do not recharge it.
 
-Retro is the default. Choose **Menu > Graphics** before starting, or **pause > 5** during a run. Modern is an optional 2.5D art prototype with shaded actors, a lit planet, atmospheric depth, and terrain shading. It preserves gameplay, collision sizes, and the original retro textures. The preference survives restart.
+Retro is the default. Press **F8** at the title or during play to switch instantly (remappable in Controls). You can also use **Menu > Graphics** or **pause > 5**. Modern is an optional 2.5D art prototype with imported high-resolution actors, a ringed planet, atmospheric depth, shaded terrain, ship banking, and richer weapon effects. It preserves gameplay, collision sizes, and the original retro textures. The preference survives restart.
+
+The latest [cleanup and validation notes](docs/project-starkiller-prototype/2026-09-05-tasks-switchable-visuals-cleanup.md) document module boundaries and exported-pack checks.
 
 ## Automated Tests
 

@@ -4,12 +4,15 @@ This folder is the canonical documentation for the current Starkiller Space Game
 
 ## Current Status
 
+Latest: [switchable visuals cleanup and polish](2026-09-05-tasks-switchable-visuals-cleanup.md). F8 now switches looks during play; modern artwork uses imported resources.
+
 Remote includes the performance/respawn fixes. The active [roadmap recovery and modern-mode tracker](2026-09-05-tasks-roadmap-recovery-and-modern-mode.md) records the new Nova/presentation slice, cleanup work, and remaining playtest gates. The earlier Session 11 summary could not be matched to repository history.
 
 ## Timeline
 
 | Date | Type | File | Notes |
 | --- | --- | --- | --- |
+| 2026-09-05 | Tasks | [2026-09-05-tasks-switchable-visuals-cleanup.md](2026-09-05-tasks-switchable-visuals-cleanup.md) | Visual cleanup, live switching, modern polish and export validation |
 | 2026-09-05 | Tasks | [2026-09-05-tasks-roadmap-recovery-and-modern-mode.md](2026-09-05-tasks-roadmap-recovery-and-modern-mode.md) | Active roadmap, cleanup, Nova, modern prototype |
 | 2026-02-27 | Brainstorm | `2026-02-27-brainstorm-scramble-desktop-discovery.md` | Discovery and research-first plan |
 | 2026-02-28 | Spec | `2026-02-28-spec-starkiller-prototype-v1.md` | Current gameplay/tech contract |

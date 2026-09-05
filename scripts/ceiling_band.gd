@@ -1,5 +1,13 @@
 extends Node2D
 
+const MODERN_STYLE := preload("res://scripts/modern_terrain_style.gd")
+var modern_style := false
+
+func set_modern_style(value: bool) -> void:
+	modern_style = value
+	queue_redraw()
+
+
 const SEGMENT_PROFILES := [
 	{
 		"base": 0.16,
@@ -84,8 +92,11 @@ func _draw() -> void:
 	points.push_back(Vector2(size.x + step, 0))
 
 	draw_colored_polygon(points, _fill_color)
-	draw_polyline(ridge, _line_color, 2.5)
-	_draw_ceiling_teeth(ridge)
+	if modern_style:
+		MODERN_STYLE.draw_surface(self, ridge, _fill_color, _line_color, false)
+	else:
+		draw_polyline(ridge, _line_color, 2.5)
+		_draw_ceiling_teeth(ridge)
 
 func _draw_ceiling_teeth(ridge: PackedVector2Array) -> void:
 	if ridge.size() < 2:
