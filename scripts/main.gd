@@ -1,5 +1,8 @@
 extends Node2D
 
+const MODERN_VISUALS_SCRIPT := preload("res://scripts/modern_visuals.gd")
+const NOVA_RADIUS := 260.0
+
 const FUEL_DRAIN_PER_SECOND := 0.05
 const REFUEL_PER_SECOND := 32.0
 const REFUEL_RECT := Rect2(Vector2(15, 170), Vector2(130, 260))
@@ -45,6 +48,7 @@ const REMAP_ACTIONS: Array[String] = [
 	"move_right",
 	"fire",
 	"bomb",
+	"ultimate",
 	"start",
 	"pause"
 ]
@@ -55,6 +59,7 @@ const ACTION_LABELS := {
 	"move_right": "Move Right",
 	"fire": "Fire",
 	"bomb": "Bomb",
+	"ultimate": "Nova Burst",
 	"start": "Start / Retry",
 	"pause": "Pause / Resume"
 }
@@ -65,12 +70,13 @@ const DEFAULT_KEY_BINDINGS := {
 	"move_right": KEY_RIGHT,
 	"fire": KEY_Z,
 	"bomb": KEY_X,
+	"ultimate": KEY_C,
 	"start": KEY_ENTER,
 	"pause": KEY_ESCAPE
 }
-const INPUT_BINDINGS_SETTINGS_PATH := "user://settings.cfg"
+var input_bindings_settings_path := "user://settings.cfg"
 const INPUT_BINDINGS_SECTION := "input_bindings"
-const START_SUBMENU_OPTIONS := ["start", "controls", "window_mode", "back"]
+const START_SUBMENU_OPTIONS := ["start", "controls", "window_mode", "visual_mode", "back"]
 const INPUT_DEBUG_ACTIONS: Array[String] = [
 	"move_up",
 	"move_down",
@@ -78,6 +84,7 @@ const INPUT_DEBUG_ACTIONS: Array[String] = [
 	"move_right",
 	"fire",
 	"bomb",
+	"ultimate",
 	"start",
 	"pause",
 	"toggle_fullscreen"
@@ -96,6 +103,8 @@ enum TrackedNodeList {
 @onready var player: Node2D = $PlayerShip
 @onready var hud: Control = $CanvasLayer/HUD
 @onready var state_label: Label = $CanvasLayer/HUD/StateLabel
+@onready var nova_label: Label = $CanvasLayer/HUD/NovaLabel
+@onready var status_title: Label = $CanvasLayer/HUD/StateTitle
 @onready var fuel_bar: ProgressBar = $CanvasLayer/HUD/FuelBar
 @onready var fuel_value_label: Label = $CanvasLayer/HUD/FuelValue
 @onready var input_label: Label = $CanvasLayer/HUD/InputLabel
@@ -115,6 +124,8 @@ enum TrackedNodeList {
 @onready var remap_status_label: Label = $CanvasLayer/RemapPanel/VBox/RemapStatus
 @onready var remap_list_label: Label = $CanvasLayer/RemapPanel/VBox/RemapList
 @onready var stage_banner: Label = $CanvasLayer/StageBanner
+
+var modern_visuals = null
 
 var game_state = GAME_STATE_SCRIPT.new()
 var last_action_text := "No actions yet"
@@ -172,6 +183,9 @@ func _ready() -> void:
 	_load_stage_segments()
 	_ensure_fullscreen_input_action()
 	_load_input_bindings()
+	modern_visuals = MODERN_VISUALS_SCRIPT.new()
+	add_child(modern_visuals)
+	modern_visuals.setup(self)
 	game_state.changed.connect(_on_game_state_changed)
 	game_state.action_triggered.connect(_on_action_triggered)
 	game_state.player_died.connect(_on_player_died)
@@ -215,17 +229,17 @@ func _sync_player_playfield_bounds() -> void:
 	player.set("top_margin", target_top_margin)
 
 func _load_startup_art() -> void:
-	_assign_texture_from_image(start_landscape, STARTUP_LANDSCAPE_PATH)
-	_assign_texture_from_image(start_ship, STARTUP_SHIP_PATH)
+	_assign_startup_texture(start_landscape, STARTUP_LANDSCAPE_PATH)
+	_assign_startup_texture(start_ship, STARTUP_SHIP_PATH)
 
-func _assign_texture_from_image(target: TextureRect, image_path: String) -> void:
+func _assign_startup_texture(target: TextureRect, image_path: String) -> void:
 	if target == null:
 		return
-	var image := Image.load_from_file(image_path)
-	if image == null or image.is_empty():
+	var texture := load(image_path) as Texture2D
+	if texture == null:
 		push_warning("Failed to load startup art: %s" % image_path)
 		return
-	target.texture = ImageTexture.create_from_image(image)
+	target.texture = texture
 
 func _prewarm_sfx_pool() -> void:
 	for _i in range(DEFAULT_SFX_POOL_SIZE):
@@ -335,6 +349,10 @@ func _handle_key_event(event: InputEventKey) -> void:
 		KEY_3:
 			_toggle_fullscreen()
 			_consume_input_event()
+		KEY_5:
+			if not is_remap_menu_open:
+				_toggle_visual_mode()
+				_consume_input_event()
 		KEY_4:
 			is_remap_menu_open = not is_remap_menu_open
 			awaiting_rebind = false
@@ -461,6 +479,8 @@ func _activate_start_submenu_option() -> void:
 		"window_mode":
 			_toggle_fullscreen()
 			_update_start_screen_ui()
+		"visual_mode":
+			_toggle_visual_mode()
 		"back":
 			is_start_menu_details_open = false
 			start_submenu_selected_index = 0
@@ -502,7 +522,8 @@ func _update_start_screen_ui() -> void:
 			_start_menu_option_line(0, run_label),
 			_start_menu_option_line(1, "CONTROLS"),
 			_start_menu_option_line(2, "WINDOW MODE: %s" % mode_label),
-			_start_menu_option_line(3, "BACK")
+			_start_menu_option_line(3, "GRAPHICS: %s" % _visual_mode_label()),
+			_start_menu_option_line(4, "BACK")
 		]
 		start_options_label.text = "\n".join(submenu_lines)
 		start_hint_label.text = "Use Up/Down, Enter to confirm, Esc to return."
@@ -553,6 +574,8 @@ func _process(delta: float) -> void:
 		if Input.is_action_just_pressed("fire"):
 			game_state.register_action("Fire")
 			_spawn_bolt()
+		if Input.is_action_just_pressed("ultimate") and stage_transition_remaining <= 0.0:
+			_try_trigger_nova()
 		if Input.is_action_just_pressed("bomb"):
 			_try_trigger_bomb()
 
@@ -1087,11 +1110,12 @@ func _on_respawned() -> void:
 	last_action_text = "Respawned"
 
 func _update_hud() -> void:
-	var next_state_label := "SCR %05d    LIV %d    STG %d    %s" % [
+	status_title.text = game_state.status_text().to_upper()
+	nova_label.text = "NOVA READY" if game_state.nova_charge >= 100.0 else "NOVA %d%%" % int(game_state.nova_charge)
+	var next_state_label := "SCR %05d   LIV %d   STG %d" % [
 		game_state.score,
 		max(game_state.lives, 0),
-		game_state.stage_id,
-		game_state.status_text()
+		game_state.stage_id
 	]
 	if next_state_label != _last_state_label_text:
 		_last_state_label_text = next_state_label
@@ -1121,9 +1145,10 @@ func _update_info_label() -> void:
 		_action_binding_text("fire"),
 		_action_binding_text("bomb")
 	]
+	base_text += "    %s NOVA" % _action_binding_text("ultimate")
 	var next_text := base_text
 	if game_state.run_started and game_state.is_paused:
-		next_text = "%s    1 RESUME  2 RETRY  3 WINDOW  4 REMAP" % base_text
+		next_text = "%s    1 RESUME  2 RETRY  3 WINDOW  4 REMAP  5 GRAPHICS" % base_text
 	if info_label.text != next_text:
 		info_label.text = next_text
 
@@ -1180,7 +1205,7 @@ func _update_pause_menu() -> void:
 	var mode_name := "Fullscreen"
 	if current_mode == DisplayServer.WINDOW_MODE_WINDOWED:
 		mode_name = "Windowed"
-	var next_text := "1 Resume\n2 Retry Run\n3 Toggle Window Mode (%s)\n4 Input Remap" % mode_name
+	var next_text := "1 Resume\n2 Retry Run\n3 Toggle Window Mode (%s)\n4 Input Remap\n5 Graphics: %s" % [mode_name, _visual_mode_label()]
 	if next_text != _last_pause_options_text:
 		_last_pause_options_text = next_text
 		pause_options_label.text = next_text
@@ -1249,8 +1274,12 @@ func _reset_action_binding(action_name: String) -> void:
 	_update_info_label()
 
 func _load_input_bindings() -> void:
+	for action_name in REMAP_ACTIONS:
+		if not InputMap.has_action(action_name):
+			InputMap.add_action(action_name)
+			_set_single_key_binding(action_name, int(DEFAULT_KEY_BINDINGS[action_name]))
 	var settings := ConfigFile.new()
-	var load_error := settings.load(INPUT_BINDINGS_SETTINGS_PATH)
+	var load_error := settings.load(input_bindings_settings_path)
 	if load_error == OK:
 		for action_name in REMAP_ACTIONS:
 			var saved_keycode := int(settings.get_value(INPUT_BINDINGS_SECTION, action_name, 0))
@@ -1264,9 +1293,10 @@ func _load_input_bindings() -> void:
 
 func _save_input_bindings() -> void:
 	var settings := ConfigFile.new()
+	settings.load(input_bindings_settings_path)
 	for action_name in REMAP_ACTIONS:
 		settings.set_value(INPUT_BINDINGS_SECTION, action_name, _primary_action_keycode(action_name))
-	var save_error := settings.save(INPUT_BINDINGS_SETTINGS_PATH)
+	var save_error := settings.save(input_bindings_settings_path)
 	if save_error != OK:
 		push_warning("Failed to save input bindings (%d)." % save_error)
 		remap_status_text = "Failed to save bindings (error %d)." % save_error
@@ -1357,3 +1387,30 @@ func _keycode_label(keycode: int) -> String:
 	if keycode >= KEY_0 and keycode <= KEY_9:
 		return char(keycode)
 	return "Key %d" % keycode
+
+func _visual_mode_label() -> String:
+	return "MODERN" if modern_visuals != null and modern_visuals.enabled else "RETRO"
+
+func _toggle_visual_mode() -> void:
+	modern_visuals.set_enabled(not modern_visuals.enabled)
+	_update_start_screen_ui()
+	_update_pause_menu()
+
+func _try_trigger_nova() -> void:
+	if stage_transition_remaining > 0.0 or not game_state.try_spend_nova():
+		return
+	var kills := 0
+	for enemy in _enemy_nodes:
+		if not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
+			continue
+		if not _circles_overlap(player.position, enemy.position, NOVA_RADIUS + enemy.hit_radius):
+			continue
+		var points := int(enemy.apply_hit("bomb"))
+		if points > 0:
+			# Nova kills award points without charging the next Nova.
+			game_state.add_score(points, false)
+			_spawn_explosion(enemy.position, false)
+			kills += 1
+	_spawn_impact_flash(player.position, NOVA_RADIUS, Color(0.4, 0.85, 1.0, 0.55))
+	_play_sfx("impact", -5.8, 0.05)
+	game_state.register_action("Nova Burst (%d targets)" % kills)

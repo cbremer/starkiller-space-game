@@ -225,10 +225,10 @@ layout_mode = 0
 offset_left = 28.0
 offset_top = 40.0
 offset_right = 340.0
-offset_bottom = 90.0
+offset_bottom = 64.0
 text = "State"
 theme_override_colors/font_color = Color(0.89, 0.96, 1, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 
 [node name="FuelTitle" type="Label" parent="CanvasLayer/HUD"]
 layout_mode = 0
@@ -255,14 +255,25 @@ theme_override_font_sizes/font_size = 16
 
 [node name="FuelValue" type="Label" parent="CanvasLayer/HUD"]
 layout_mode = 0
-offset_left = 404.0
-offset_top = 68.0
+offset_left = 900.0
+offset_top = 16.0
 offset_right = 1032.0
-offset_bottom = 98.0
+offset_bottom = 38.0
 text = "100.0%"
 theme_override_colors/font_color = Color(1, 0.76, 0.4, 1)
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="NovaLabel" type="Label" parent="CanvasLayer/HUD"]
+layout_mode = 0
+offset_left = 580.0
+offset_top = 16.0
+offset_right = 880.0
+offset_bottom = 38.0
+text = "NOVA 0%"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.4, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 18
 
 [node name="ActionTitle" type="Label" parent="CanvasLayer/HUD"]
 visible = false

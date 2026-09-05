@@ -21,5 +21,14 @@ jobs:
           version: 4.6.1
           use-dotnet: false
 
+      - name: Import project assets
+        run: godot --headless --path . --editor --import --quit
+
       - name: Run headless tests
         run: godot --headless --path . --script res://tests/run_tests.gd
+
+      - name: Run smoke checks
+        run: godot --headless --path . --script res://scripts/smoke_test.gd
+
+      - name: Run presentation integration
+        run: godot --headless --path . --script res://tests/presentation_integration.gd

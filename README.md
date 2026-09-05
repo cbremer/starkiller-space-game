@@ -8,16 +8,24 @@ A standalone promotional landing page now lives at `web/index.html`.
 1. Open this folder in **Godot 4.6.1+**.
 2. Press Play (`F5`) to run `scenes/Main.tscn`.
 3. Press `Enter` to start a run.
-4. Default presentation uses a 1280x720 gameplay viewport upscaled to a 1920x1080 window and starts in windowed mode (`F11` toggles fullscreen).
-5. From the startup `MENU`, you can change window mode or remap controls before starting the run.
+4. Default presentation uses a 1920x1080 gameplay viewport and window and starts in windowed mode (`F11` toggles fullscreen).
+5. From the startup `MENU`, you can change graphics (Retro / Modern), change window mode, or remap controls before starting the run.
+
+## Nova and presentation
+
+`C` activates Nova when the HUD reads **NOVA READY** (remappable in Controls). Score charges it; the burst destroys nearby enemies within 260 pixels. Nova kills do not recharge it.
+
+Retro is the default. Choose **Menu > Graphics** before starting, or **pause > 5** during a run. Modern is an optional 2.5D art prototype with shaded actors, a lit planet, atmospheric depth, and terrain shading. It preserves gameplay, collision sizes, and the original retro textures. The preference survives restart.
 
 ## Automated Tests
 
-Run the headless test suite:
+Import assets once after a fresh clone (`godot --headless --editor --path . --import --quit`), then run the headless test suite:
 
 ```bash
-mkdir -p /tmp/starkiller-tests && /Applications/Godot.app/Contents/MacOS/Godot --headless --path . --user-data-dir /tmp/starkiller-tests --log-file /tmp/starkiller-tests/godot.log --script res://tests/run_tests.gd
+mkdir -p /tmp/starkiller-tests && /Applications/Godot.app/Contents/MacOS/Godot --headless --path . --log-file /tmp/starkiller-tests/godot.log --script res://tests/run_tests.gd
 ```
+
+Also run `godot --headless --path . --script res://scripts/smoke_test.gd` and `godot --headless --path . --script res://tests/presentation_integration.gd`.
 
 Current coverage includes both unit checks and scenario flows for `GameState`:
 - start/pause behavior
@@ -74,7 +82,7 @@ Press `Esc` to open the pause menu—resume, retry, toggle window mode, or open 
 
 Run automated Session 5 smoke checks:
 
-`mkdir -p /tmp/starkiller-smoke && /Applications/Godot.app/Contents/MacOS/Godot --headless --path /Users/chrisbremer/code/starkiller-space-game --user-data-dir /tmp/starkiller-smoke --log-file /tmp/starkiller-smoke/godot.log --script res://scripts/smoke_test.gd`
+`mkdir -p /tmp/starkiller-smoke && /Applications/Godot.app/Contents/MacOS/Godot --headless --path . --log-file /tmp/starkiller-smoke/godot.log --script res://scripts/smoke_test.gd`
 
 ## Importing Images
 
@@ -108,5 +116,5 @@ Project documentation now follows a project-scoped docs convention:
 - Docs index: `docs/README.md`
 - Project docs entrypoint: `docs/project-starkiller-prototype/README.md`
 - Canonical spec: `docs/project-starkiller-prototype/2026-02-28-spec-starkiller-prototype-v1.md`
-- Latest tasks file: `docs/project-starkiller-prototype/2026-03-02-tasks-session-09-terrain-drive.md` (active Session 9 tracker; manual validation + terrain polish)
+- Latest tasks file: [Roadmap recovery and modern mode](docs/project-starkiller-prototype/2026-09-05-tasks-roadmap-recovery-and-modern-mode.md)
 - Historical roadmap archive: `docs/project-starkiller-prototype/2026-02-28-tasks-session-01-05-roadmap.md`
