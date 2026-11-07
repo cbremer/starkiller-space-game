@@ -1,7 +1,31 @@
-[gd_scene load_steps=3 format=3 uid="uid://c77wfc07q2n0e"]
+[gd_scene load_steps=5 format=3 uid="uid://c77wfc07q2n0e"]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_7ooxk"]
 [ext_resource type="Script" path="res://scripts/player_ship.gd" id="2_as8vx"]
+
+[sub_resource type="StyleBoxFlat" id="StyleGraphicsNormal"]
+bg_color = Color(0.035, 0.07, 0.17, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.91, 1, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleGraphicsHover"]
+bg_color = Color(0.08, 0.24, 0.34, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.97, 1, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_7ooxk")
@@ -225,10 +249,10 @@ layout_mode = 0
 offset_left = 28.0
 offset_top = 40.0
 offset_right = 340.0
-offset_bottom = 90.0
+offset_bottom = 64.0
 text = "State"
 theme_override_colors/font_color = Color(0.89, 0.96, 1, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 
 [node name="FuelTitle" type="Label" parent="CanvasLayer/HUD"]
 layout_mode = 0
@@ -255,14 +279,25 @@ theme_override_font_sizes/font_size = 16
 
 [node name="FuelValue" type="Label" parent="CanvasLayer/HUD"]
 layout_mode = 0
-offset_left = 404.0
-offset_top = 68.0
+offset_left = 900.0
+offset_top = 16.0
 offset_right = 1032.0
-offset_bottom = 98.0
+offset_bottom = 38.0
 text = "100.0%"
 theme_override_colors/font_color = Color(1, 0.76, 0.4, 1)
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="NovaLabel" type="Label" parent="CanvasLayer/HUD"]
+layout_mode = 0
+offset_left = 580.0
+offset_top = 16.0
+offset_right = 880.0
+offset_bottom = 38.0
+text = "NOVA 0%"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(0.4, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 18
 
 [node name="ActionTitle" type="Label" parent="CanvasLayer/HUD"]
 visible = false
@@ -406,3 +441,64 @@ theme_override_font_sizes/font_size = 19
 text = "Bindings"
 autowrap_mode = 2
 theme_override_font_sizes/font_size = 20
+
+[node name="MenuButtons" type="VBoxContainer" parent="CanvasLayer"]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -302.0
+offset_top = 24.0
+offset_right = -30.0
+offset_bottom = 124.0
+theme_override_constants/separation = 12
+
+[node name="SettingsButton" type="Button" parent="CanvasLayer/MenuButtons"]
+custom_minimum_size = Vector2(0, 44)
+focus_mode = 0
+text = "Settings"
+theme_override_font_sizes/font_size = 22
+
+[node name="QuitButton" type="Button" parent="CanvasLayer/MenuButtons"]
+custom_minimum_size = Vector2(0, 44)
+focus_mode = 0
+text = "Quit Game"
+theme_override_font_sizes/font_size = 22
+
+[node name="GraphicsSettings" type="PanelContainer" parent="CanvasLayer"]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -145.0
+offset_right = 260.0
+offset_bottom = 145.0
+theme_override_styles/panel = SubResource("StyleGraphicsNormal")
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/GraphicsSettings"]
+theme_override_constants/separation = 22
+
+[node name="Title" type="Label" parent="CanvasLayer/GraphicsSettings/VBox"]
+text = "GRAPHICS SETTINGS"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 30
+
+[node name="GraphicsButton" type="Button" parent="CanvasLayer/GraphicsSettings/VBox"]
+custom_minimum_size = Vector2(0, 56)
+focus_mode = 0
+text = "Switch to Modern"
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleGraphicsNormal")
+theme_override_styles/hover = SubResource("StyleGraphicsHover")
+theme_override_styles/pressed = SubResource("StyleGraphicsHover")
+
+[node name="BackButton" type="Button" parent="CanvasLayer/GraphicsSettings/VBox"]
+custom_minimum_size = Vector2(0, 44)
+focus_mode = 0
+text = "Back"
+theme_override_font_sizes/font_size = 22
+
+[node name="Hint" type="Label" parent="CanvasLayer/GraphicsSettings/VBox"]
+text = "Your graphics preference is saved."
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18

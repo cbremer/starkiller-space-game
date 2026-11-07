@@ -9,6 +9,12 @@ class_name ImpactFlash
 
 var _age := 0.0
 
+var modern_style := false
+
+func set_modern_style(value: bool) -> void:
+	modern_style = value
+	queue_redraw()
+
 func _ready() -> void:
 	add_to_group("combat_vfx")
 
@@ -31,4 +37,6 @@ func _draw() -> void:
 	halo.a *= 0.45
 	draw_circle(Vector2.ZERO, radius * 1.55, halo)
 	draw_circle(Vector2.ZERO, radius, fill)
-	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 36, ring, 2.0)
+	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 96 if modern_style else 36, ring, 2.0, modern_style)
+	if modern_style:
+		draw_arc(Vector2.ZERO, radius * 0.82, 0.0, TAU, 96, fill, 1.0, true)

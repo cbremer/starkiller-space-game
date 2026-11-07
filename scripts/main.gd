@@ -1,5 +1,8 @@
 extends Node2D
 
+const MODERN_VISUALS_SCRIPT := preload("res://scripts/modern_visuals.gd")
+const NOVA_RADIUS := 260.0
+
 const FUEL_DRAIN_PER_SECOND := 0.05
 const REFUEL_PER_SECOND := 32.0
 const REFUEL_RECT := Rect2(Vector2(15, 170), Vector2(130, 260))
@@ -38,39 +41,13 @@ const STARTUP_SHIP_PATH := "res://assets/ui/startup/starkiller_ship.png"
 const BOMB_GROUND_BLAST_RADIUS := 92.0
 const MAJOR_SHAKE_STRENGTH := 8.0
 const MINOR_SHAKE_STRENGTH := 4.0
-const REMAP_ACTIONS: Array[String] = [
-	"move_up",
-	"move_down",
-	"move_left",
-	"move_right",
-	"fire",
-	"bomb",
-	"start",
-	"pause"
-]
-const ACTION_LABELS := {
-	"move_up": "Move Up",
-	"move_down": "Move Down",
-	"move_left": "Move Left",
-	"move_right": "Move Right",
-	"fire": "Fire",
-	"bomb": "Bomb",
-	"start": "Start / Retry",
-	"pause": "Pause / Resume"
-}
-const DEFAULT_KEY_BINDINGS := {
-	"move_up": KEY_UP,
-	"move_down": KEY_DOWN,
-	"move_left": KEY_LEFT,
-	"move_right": KEY_RIGHT,
-	"fire": KEY_Z,
-	"bomb": KEY_X,
-	"start": KEY_ENTER,
-	"pause": KEY_ESCAPE
-}
-const INPUT_BINDINGS_SETTINGS_PATH := "user://settings.cfg"
+const INPUT_PROFILE := preload("res://scripts/input_profile.gd")
+const REMAP_ACTIONS = INPUT_PROFILE.REMAP_ACTIONS
+const ACTION_LABELS = INPUT_PROFILE.ACTION_LABELS
+const DEFAULT_KEY_BINDINGS = INPUT_PROFILE.DEFAULT_KEY_BINDINGS
+var input_bindings_settings_path := "user://settings.cfg"
 const INPUT_BINDINGS_SECTION := "input_bindings"
-const START_SUBMENU_OPTIONS := ["start", "controls", "window_mode", "back"]
+const START_SUBMENU_OPTIONS := ["start", "controls", "window_mode", "visual_mode", "back"]
 const INPUT_DEBUG_ACTIONS: Array[String] = [
 	"move_up",
 	"move_down",
@@ -78,6 +55,7 @@ const INPUT_DEBUG_ACTIONS: Array[String] = [
 	"move_right",
 	"fire",
 	"bomb",
+	"ultimate",
 	"start",
 	"pause",
 	"toggle_fullscreen"
@@ -93,9 +71,17 @@ enum TrackedNodeList {
 	FUEL_TANKS
 }
 
+@onready var graphics_button: Button = $CanvasLayer/GraphicsSettings/VBox/GraphicsButton
+@onready var graphics_settings: PanelContainer = $CanvasLayer/GraphicsSettings
+@onready var menu_buttons: VBoxContainer = $CanvasLayer/MenuButtons
+@onready var settings_button: Button = $CanvasLayer/MenuButtons/SettingsButton
+@onready var quit_button: Button = $CanvasLayer/MenuButtons/QuitButton
+@onready var settings_back: Button = $CanvasLayer/GraphicsSettings/VBox/BackButton
 @onready var player: Node2D = $PlayerShip
 @onready var hud: Control = $CanvasLayer/HUD
 @onready var state_label: Label = $CanvasLayer/HUD/StateLabel
+@onready var nova_label: Label = $CanvasLayer/HUD/NovaLabel
+@onready var status_title: Label = $CanvasLayer/HUD/StateTitle
 @onready var fuel_bar: ProgressBar = $CanvasLayer/HUD/FuelBar
 @onready var fuel_value_label: Label = $CanvasLayer/HUD/FuelValue
 @onready var input_label: Label = $CanvasLayer/HUD/InputLabel
@@ -115,6 +101,10 @@ enum TrackedNodeList {
 @onready var remap_status_label: Label = $CanvasLayer/RemapPanel/VBox/RemapStatus
 @onready var remap_list_label: Label = $CanvasLayer/RemapPanel/VBox/RemapList
 @onready var stage_banner: Label = $CanvasLayer/StageBanner
+
+var visual_settings_path := "user://visual_settings.cfg"
+var is_pause_settings_open := false
+var modern_visuals = null
 
 var game_state = GAME_STATE_SCRIPT.new()
 var last_action_text := "No actions yet"
@@ -172,6 +162,16 @@ func _ready() -> void:
 	_load_stage_segments()
 	_ensure_fullscreen_input_action()
 	_load_input_bindings()
+	modern_visuals = MODERN_VISUALS_SCRIPT.new()
+	add_child(modern_visuals)
+	modern_visuals.settings_path = visual_settings_path
+	modern_visuals.setup(self)
+	modern_visuals.style_changed.connect(_on_visual_mode_changed)
+	graphics_button.pressed.connect(_toggle_visual_mode)
+	settings_button.pressed.connect(_open_settings)
+	quit_button.pressed.connect(_quit_game)
+	settings_back.pressed.connect(_close_settings)
+	_update_graphics_button()
 	game_state.changed.connect(_on_game_state_changed)
 	game_state.action_triggered.connect(_on_action_triggered)
 	game_state.player_died.connect(_on_player_died)
@@ -215,17 +215,17 @@ func _sync_player_playfield_bounds() -> void:
 	player.set("top_margin", target_top_margin)
 
 func _load_startup_art() -> void:
-	_assign_texture_from_image(start_landscape, STARTUP_LANDSCAPE_PATH)
-	_assign_texture_from_image(start_ship, STARTUP_SHIP_PATH)
+	_assign_startup_texture(start_landscape, STARTUP_LANDSCAPE_PATH)
+	_assign_startup_texture(start_ship, STARTUP_SHIP_PATH)
 
-func _assign_texture_from_image(target: TextureRect, image_path: String) -> void:
+func _assign_startup_texture(target: TextureRect, image_path: String) -> void:
 	if target == null:
 		return
-	var image := Image.load_from_file(image_path)
-	if image == null or image.is_empty():
+	var texture := load(image_path) as Texture2D
+	if texture == null:
 		push_warning("Failed to load startup art: %s" % image_path)
 		return
-	target.texture = ImageTexture.create_from_image(image)
+	target.texture = texture
 
 func _prewarm_sfx_pool() -> void:
 	for _i in range(DEFAULT_SFX_POOL_SIZE):
@@ -302,6 +302,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	_handle_key_event(key_event)
 
 func _handle_key_event(event: InputEventKey) -> void:
+	if is_pause_settings_open:
+		if event.keycode in [KEY_ESCAPE, KEY_BACKSPACE]:
+			_close_settings()
+			_suppress_pause_this_frame = event.is_action_pressed("pause")
+		elif event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
+			_toggle_visual_mode()
+		_consume_input_event()
+		return
 	if _is_title_overlay_visible():
 		_handle_start_screen_key_event(event)
 		return
@@ -335,6 +343,13 @@ func _handle_key_event(event: InputEventKey) -> void:
 		KEY_3:
 			_toggle_fullscreen()
 			_consume_input_event()
+		KEY_5:
+			if not is_remap_menu_open:
+				_open_settings()
+				_consume_input_event()
+		KEY_6:
+			if not is_remap_menu_open:
+				_quit_game()
 		KEY_4:
 			is_remap_menu_open = not is_remap_menu_open
 			awaiting_rebind = false
@@ -430,7 +445,7 @@ func _handle_start_screen_key_event(event: InputEventKey) -> void:
 
 	match event.keycode:
 		KEY_UP, KEY_DOWN:
-			start_menu_selected_index = 1 - start_menu_selected_index
+			start_menu_selected_index = wrapi(start_menu_selected_index + (-1 if event.keycode == KEY_UP else 1), 0, 3)
 			_update_start_screen_ui()
 			_consume_input_event()
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
@@ -439,6 +454,8 @@ func _handle_start_screen_key_event(event: InputEventKey) -> void:
 				_start_run()
 				last_action_text = "Run restarted from game over" if from_game_over else "Run started from title screen"
 				action_label.text = "Last Action: %s" % last_action_text
+			elif start_menu_selected_index == 2:
+				_quit_game()
 			else:
 				is_start_menu_details_open = true
 				start_submenu_selected_index = 0
@@ -461,6 +478,8 @@ func _activate_start_submenu_option() -> void:
 		"window_mode":
 			_toggle_fullscreen()
 			_update_start_screen_ui()
+		"visual_mode":
+			_toggle_visual_mode()
 		"back":
 			is_start_menu_details_open = false
 			start_submenu_selected_index = 0
@@ -470,6 +489,7 @@ func _update_start_screen_ui() -> void:
 	if start_screen == null:
 		return
 
+	_refresh_navigation_ui()
 	var show_title_overlay := _is_title_overlay_visible()
 	start_screen.visible = show_title_overlay
 	hud.visible = not show_title_overlay
@@ -493,7 +513,7 @@ func _update_start_screen_ui() -> void:
 		return
 
 	if is_start_menu_details_open:
-		start_prompt_label.text = "MENU" if not is_game_over_overlay else "GAME OVER MENU"
+		start_prompt_label.text = "SETTINGS"
 		var run_label := "RETRY RUN" if is_game_over_overlay else "START RUN"
 		var mode_label := "Fullscreen"
 		if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_WINDOWED:
@@ -502,7 +522,8 @@ func _update_start_screen_ui() -> void:
 			_start_menu_option_line(0, run_label),
 			_start_menu_option_line(1, "CONTROLS"),
 			_start_menu_option_line(2, "WINDOW MODE: %s" % mode_label),
-			_start_menu_option_line(3, "BACK")
+			_start_menu_option_line(3, "GRAPHICS: %s" % _visual_mode_label()),
+			_start_menu_option_line(4, "BACK")
 		]
 		start_options_label.text = "\n".join(submenu_lines)
 		start_hint_label.text = "Use Up/Down, Enter to confirm, Esc to return."
@@ -512,19 +533,22 @@ func _update_start_screen_ui() -> void:
 	var start_marker := ">" if start_menu_selected_index == 0 else " "
 	var menu_marker := ">" if start_menu_selected_index == 1 else " "
 	var start_label := "RETRY RUN" if is_game_over_overlay else "START RUN"
-	start_options_label.text = "%s %s\n%s MENU" % [start_marker, start_label, menu_marker]
-	start_hint_label.text = "Use Up/Down, Enter to confirm."
+	var quit_marker := ">" if start_menu_selected_index == 2 else " "
+	start_options_label.text = "%s %s\n%s SETTINGS\n%s QUIT GAME" % [start_marker, start_label, menu_marker, quit_marker]
+	start_hint_label.text = "Up/Down to choose · Enter to confirm"
 
 func _process(delta: float) -> void:
 	_sync_player_playfield_bounds()
 
 	if Input.is_action_just_pressed("start"):
-		if game_state.run_started and game_state.is_paused and not is_remap_menu_open and not awaiting_rebind:
+		if game_state.run_started and game_state.is_paused and not is_remap_menu_open and not awaiting_rebind and not is_pause_settings_open:
 			_start_run()
 
 	if Input.is_action_just_pressed("pause"):
 		if _suppress_pause_this_frame:
 			_suppress_pause_this_frame = false
+		elif is_pause_settings_open:
+			_close_settings()
 		elif awaiting_rebind:
 			awaiting_rebind = false
 			remap_status_text = "Rebind canceled."
@@ -553,6 +577,8 @@ func _process(delta: float) -> void:
 		if Input.is_action_just_pressed("fire"):
 			game_state.register_action("Fire")
 			_spawn_bolt()
+		if Input.is_action_just_pressed("ultimate") and stage_transition_remaining <= 0.0:
+			_try_trigger_nova()
 		if Input.is_action_just_pressed("bomb"):
 			_try_trigger_bomb()
 
@@ -580,6 +606,7 @@ func _process(delta: float) -> void:
 	_update_screen_shake(delta)
 
 func _start_run() -> void:
+	is_pause_settings_open = false
 	game_state.start_run()
 	player.position = Vector2(120, 320)
 	position = Vector2.ZERO
@@ -1087,11 +1114,12 @@ func _on_respawned() -> void:
 	last_action_text = "Respawned"
 
 func _update_hud() -> void:
-	var next_state_label := "SCR %05d    LIV %d    STG %d    %s" % [
+	status_title.text = game_state.status_text().to_upper()
+	nova_label.text = "NOVA READY" if game_state.nova_charge >= 100.0 else "NOVA %d%%" % int(game_state.nova_charge)
+	var next_state_label := "SCR %05d   LIV %d   STG %d" % [
 		game_state.score,
 		max(game_state.lives, 0),
-		game_state.stage_id,
-		game_state.status_text()
+		game_state.stage_id
 	]
 	if next_state_label != _last_state_label_text:
 		_last_state_label_text = next_state_label
@@ -1121,9 +1149,10 @@ func _update_info_label() -> void:
 		_action_binding_text("fire"),
 		_action_binding_text("bomb")
 	]
+	base_text += "    %s NOVA" % _action_binding_text("ultimate")
 	var next_text := base_text
 	if game_state.run_started and game_state.is_paused:
-		next_text = "%s    1 RESUME  2 RETRY  3 WINDOW  4 REMAP" % base_text
+		next_text = "%s    1 RESUME  2 RETRY  3 WINDOW  4 REMAP  5 SETTINGS  6 QUIT" % base_text
 	if info_label.text != next_text:
 		info_label.text = next_text
 
@@ -1172,7 +1201,8 @@ func _toggle_fullscreen() -> void:
 
 func _set_pause_ui_visibility() -> void:
 	var pause_visible: bool = game_state.run_started and game_state.is_paused and not _is_game_over()
-	pause_menu.visible = pause_visible
+	pause_menu.visible = pause_visible and not is_pause_settings_open
+	_refresh_navigation_ui()
 	remap_panel.visible = pause_visible and is_remap_menu_open
 
 func _update_pause_menu() -> void:
@@ -1180,7 +1210,7 @@ func _update_pause_menu() -> void:
 	var mode_name := "Fullscreen"
 	if current_mode == DisplayServer.WINDOW_MODE_WINDOWED:
 		mode_name = "Windowed"
-	var next_text := "1 Resume\n2 Retry Run\n3 Toggle Window Mode (%s)\n4 Input Remap" % mode_name
+	var next_text := "1 Resume\n2 Retry Run\n3 Toggle Window Mode (%s)\n4 Input Remap\n5 Settings\n6 Quit Game" % mode_name
 	if next_text != _last_pause_options_text:
 		_last_pause_options_text = next_text
 		pause_options_label.text = next_text
@@ -1249,8 +1279,12 @@ func _reset_action_binding(action_name: String) -> void:
 	_update_info_label()
 
 func _load_input_bindings() -> void:
+	for action_name in REMAP_ACTIONS:
+		if not InputMap.has_action(action_name):
+			InputMap.add_action(action_name)
+			_set_single_key_binding(action_name, int(DEFAULT_KEY_BINDINGS[action_name]))
 	var settings := ConfigFile.new()
-	var load_error := settings.load(INPUT_BINDINGS_SETTINGS_PATH)
+	var load_error := settings.load(input_bindings_settings_path)
 	if load_error == OK:
 		for action_name in REMAP_ACTIONS:
 			var saved_keycode := int(settings.get_value(INPUT_BINDINGS_SECTION, action_name, 0))
@@ -1264,96 +1298,93 @@ func _load_input_bindings() -> void:
 
 func _save_input_bindings() -> void:
 	var settings := ConfigFile.new()
+	settings.load(input_bindings_settings_path)
 	for action_name in REMAP_ACTIONS:
 		settings.set_value(INPUT_BINDINGS_SECTION, action_name, _primary_action_keycode(action_name))
-	var save_error := settings.save(INPUT_BINDINGS_SETTINGS_PATH)
+	var save_error := settings.save(input_bindings_settings_path)
 	if save_error != OK:
 		push_warning("Failed to save input bindings (%d)." % save_error)
 		remap_status_text = "Failed to save bindings (error %d)." % save_error
 
 func _primary_action_keycode(action_name: String) -> int:
-	for action_event in InputMap.action_get_events(action_name):
-		var key_event := action_event as InputEventKey
-		if key_event == null:
-			continue
-		var keycode := _event_keycode(key_event)
-		if _is_supported_binding_keycode(keycode):
-			return keycode
-	return int(DEFAULT_KEY_BINDINGS.get(action_name, 0))
+	return INPUT_PROFILE._primary_action_keycode(action_name)
 
 func _set_single_key_binding(action_name: String, keycode: int) -> void:
-	var safe_keycode := int(keycode)
-	if not _is_supported_binding_keycode(safe_keycode):
-		return
-	InputMap.action_erase_events(action_name)
-	var key_event := InputEventKey.new()
-	key_event.keycode = safe_keycode
-	key_event.physical_keycode = safe_keycode
-	InputMap.action_add_event(action_name, key_event)
+	INPUT_PROFILE._set_single_key_binding(action_name, keycode)
 
 func _ensure_safe_remap_bindings() -> void:
-	for action_name in REMAP_ACTIONS:
-		var has_valid_binding := false
-		for action_event in InputMap.action_get_events(action_name):
-			var key_event := action_event as InputEventKey
-			if key_event == null:
-				continue
-			if _is_supported_binding_keycode(_event_keycode(key_event)):
-				has_valid_binding = true
-				break
-		if has_valid_binding:
-			continue
-		var default_keycode := int(DEFAULT_KEY_BINDINGS.get(action_name, 0))
-		_set_single_key_binding(action_name, default_keycode)
+	INPUT_PROFILE._ensure_safe_remap_bindings()
 
 func _is_supported_binding_keycode(keycode: int) -> bool:
-	if keycode <= 0:
-		return false
-	match keycode:
-		KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE, KEY_TAB, KEY_BACKSPACE, KEY_SPACE:
-			return true
-	if keycode >= KEY_F1 and keycode <= KEY_F12:
-		return true
-	if keycode >= KEY_A and keycode <= KEY_Z:
-		return true
-	if keycode >= KEY_0 and keycode <= KEY_9:
-		return true
-	return false
+	return INPUT_PROFILE._is_supported_binding_keycode(keycode)
 
 func _consume_input_event() -> void:
 	get_viewport().set_input_as_handled()
 
 func _event_keycode(key_event: InputEventKey) -> int:
-	if key_event.keycode != 0:
-		return key_event.keycode
-	return key_event.physical_keycode
+	return INPUT_PROFILE._event_keycode(key_event)
 
 func _keycode_label(keycode: int) -> String:
-	match keycode:
-		KEY_UP:
-			return "Up"
-		KEY_DOWN:
-			return "Down"
-		KEY_LEFT:
-			return "Left"
-		KEY_RIGHT:
-			return "Right"
-		KEY_ENTER, KEY_KP_ENTER:
-			return "Enter"
-		KEY_ESCAPE:
-			return "Esc"
-		KEY_TAB:
-			return "Tab"
-		KEY_BACKSPACE:
-			return "Backspace"
-		KEY_SPACE:
-			return "Space"
-		KEY_F11:
-			return "F11"
-	if keycode >= KEY_F1 and keycode <= KEY_F12:
-		return "F%d" % int(keycode - KEY_F1 + 1)
-	if keycode >= KEY_A and keycode <= KEY_Z:
-		return char(keycode)
-	if keycode >= KEY_0 and keycode <= KEY_9:
-		return char(keycode)
-	return "Key %d" % keycode
+	return INPUT_PROFILE._keycode_label(keycode)
+
+func _visual_mode_label() -> String:
+	return "MODERN" if modern_visuals != null and modern_visuals.enabled else "RETRO"
+
+func _toggle_visual_mode() -> void:
+	if not graphics_settings.visible:
+		return
+	modern_visuals.set_enabled(not modern_visuals.enabled)
+
+func _on_visual_mode_changed() -> void:
+	_update_graphics_button()
+	_update_hud()
+	_update_start_screen_ui()
+	_update_pause_menu()
+
+func _try_trigger_nova() -> void:
+	if stage_transition_remaining > 0.0 or not game_state.try_spend_nova():
+		return
+	var kills := 0
+	for enemy in _enemy_nodes:
+		if not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
+			continue
+		if not _circles_overlap(player.position, enemy.position, NOVA_RADIUS + enemy.hit_radius):
+			continue
+		var points := int(enemy.apply_hit("bomb"))
+		if points > 0:
+			# Nova kills award points without charging the next Nova.
+			game_state.add_score(points, false)
+			_spawn_explosion(enemy.position, false)
+			kills += 1
+	_spawn_impact_flash(player.position, NOVA_RADIUS, Color(0.4, 0.85, 1.0, 0.55))
+	_play_sfx("impact", -5.8, 0.05)
+	game_state.register_action("Nova Burst (%d targets)" % kills)
+
+func _exit_tree() -> void:
+	_reset_sfx_pool()
+
+func _update_graphics_button() -> void:
+	graphics_button.text = "Switch to Retro" if modern_visuals.enabled else "Switch to Modern"
+
+func _refresh_navigation_ui() -> void:
+	var title_settings := is_start_menu_details_open and not is_start_controls_open and _is_title_overlay_visible()
+	graphics_settings.visible = title_settings or is_pause_settings_open
+	menu_buttons.visible = (_is_title_overlay_visible() or game_state.is_paused) and not graphics_settings.visible and not is_start_controls_open and not is_remap_menu_open
+
+func _open_settings() -> void:
+	if _is_title_overlay_visible():
+		is_start_menu_details_open = true
+		start_submenu_selected_index = 3
+	elif game_state.is_paused:
+		is_pause_settings_open = true
+	_update_start_screen_ui()
+	_set_pause_ui_visibility()
+
+func _close_settings() -> void:
+	is_start_menu_details_open = false
+	is_pause_settings_open = false
+	_update_start_screen_ui()
+	_set_pause_ui_visibility()
+
+func _quit_game() -> void:
+	get_tree().quit()
