@@ -1,8 +1,72 @@
-# Agent Instructions
+# AGENTS.md - AI Working Instructions for Starkiller Space Game
 
-This project keeps its primary agent instructions in `CLAUDE.md`.
+This file captures project conventions so coding agents can pick up context quickly.
+It is the single source for Codex and Claude Code; `CLAUDE.md` imports it with `@AGENTS.md`.
 
-When working with this repo, read and follow `CLAUDE.md` for:
-- Project overview and goals
-- Commands and scripts
-- Coding, testing, and documentation conventions
+## Project Overview
+
+Starkiller Space Game is a keyboard-first, Scramble-style horizontal shooter prototype built in Godot 4.
+Current focus is gameplay loop validation, tuning, and incremental feature sessions.
+
+## Repository Structure
+
+```
+starkiller-space-game/
+├── AGENTS.md
+├── CLAUDE.md
+├── README.md
+├── docs/
+│   ├── README.md
+│   ├── art-direction/
+│   │   ├── README.md
+│   │   ├── inspiration-board.md
+│   │   ├── inspiration-manifest.json
+│   │   └── worktree-plan.md
+│   └── project-starkiller-prototype/
+│       ├── README.md
+│       ├── 2026-02-27-brainstorm-scramble-desktop-discovery.md
+│       ├── 2026-02-28-spec-starkiller-prototype-v1.md
+│       └── 2026-02-28-tasks-session-01-05-roadmap.md
+├── scenes/
+├── scripts/
+├── web/
+│   ├── index.html
+│   └── styles.css
+└── assets/
+    └── concept_samples/
+        ├── README.md
+        ├── environment_tiles/
+        ├── props/
+        ├── ships/
+        ├── ui/
+        └── vfx/
+```
+
+## Docs Conventions
+
+All documentation lives under `docs/`. Each project gets its own subdirectory.
+
+File naming pattern:
+
+`YYYY-MM-DD-<type>-<detail>.md`
+
+Types:
+- `brainstorm` - discovery, references, and problem framing
+- `spec` - implementation contract and behavior definitions
+- `tasks` - session-level execution checklist
+
+Each project docs folder must contain `README.md` with:
+- project summary
+- current status
+- timeline table linking docs
+- naming convention reminder
+
+When starting a new session:
+1. add a new dated `tasks` file
+2. update the project's timeline table
+
+## Git Conventions
+
+- Branch naming: `codex/<short-description>`
+- Do not push directly to `main`
+- Keep commits scoped and descriptive

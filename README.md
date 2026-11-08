@@ -113,7 +113,7 @@ The page links directly to the repository and a downloadable zip of the current 
 
 ## Copilot / AI helpers
 
-- No Copilot-specific configuration file is required. Use the existing project context in this README and `CLAUDE.md` for guidance.
+- No Copilot-specific configuration file is required. Use the existing project context in this README and `AGENTS.md` for guidance.
 
 ## Documentation
 
